@@ -20,7 +20,7 @@
 
 ### Binary:
 
-- [ ] Dot
+- [ ] Dot (Use mul-sum reshaping/broadcasting version)
 - [ ] Mul
 
 ## Reduce:
