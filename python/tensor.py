@@ -1,6 +1,6 @@
 from __future__ import annotations
 import numpy as np
-from typing import Callable, List
+from typing import Callable, List, Union
 
 # TODO: should i return in backward?
 
@@ -27,7 +27,7 @@ class Tensor:
         return f"Tensor with shape: {self.buf.shape}"
 
     # backprop
-    def backward(self, implicit: bool = True) -> None:
+    def backward(self, implicit: bool = True):
         if self._ctx is None:
             return
 
