@@ -33,3 +33,4 @@
 
 - [ ] Reshape
 - [ ] Transpose
+- [ ] (Relatively) Fancy-Indexing
