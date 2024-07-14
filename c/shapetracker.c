@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// TODO: fix freeShapeTracker and ShapeTracker to allocate on heap
+
 // strides are reverse cumprod of shapes
 int *calculate_strides(int *shape, int ndim) {
   int *strides = (int *)malloc(ndim * sizeof(int));
@@ -66,11 +68,11 @@ ShapeTracker *createShapeTracker(int *shape, int size) {
     return NULL;
   }
 
-  printf("ShapeTracker created with %d dimensions.\n", st->ndim);
-  for (int i = 0; i < st->ndim; i++) {
-    printf("Shape[%d] = %d, Strides[%d] = %d\n", i, st->shape[i], i,
-           st->strides[i]);
-  }
+  /* printf("ShapeTracker created with %d dimensions.\n", st->ndim); */
+  /* for (int i = 0; i < st->ndim; i++) { */
+  /*   printf("Shape[%d] = %d, Strides[%d] = %d\n", i, st->shape[i], i, */
+  /*          st->strides[i]); */
+  /* } */
 
   return st;
 }

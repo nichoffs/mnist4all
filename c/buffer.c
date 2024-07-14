@@ -2,6 +2,50 @@
 #include "shapetracker.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+Buffer *createBuffer(float *data, int *shape, int size) {
+  Buffer *x = (Buffer *)malloc(sizeof(Buffer));
+  if (!x) {
+    fprintf(stderr, "Failed to allocate memory for Buffer\n");
+    return NULL;
+  }
+
+  x->data = (float *)malloc(size * sizeof(float));
+  if (!x->data) {
+    fprintf(stderr, "Failed to allocate memory for Buffer data\n");
+    free(x);
+    return NULL;
+  }
+
+  if (data != NULL) {
+    memcpy(x->data, data, size * sizeof(float));
+  }
+
+  int ndim = 0;
+  while (shape[ndim] != 0) {
+    ndim++;
+  }
+
+  int *shape_copy = (int *)malloc((ndim + 1) * sizeof(int));
+  if (!shape_copy) {
+    fprintf(stderr, "Failed to allocate memory for shape\n");
+    free(x->data);
+    free(x);
+    return NULL;
+  }
+  memcpy(shape_copy, shape, (ndim + 1) * sizeof(int));
+
+  x->shapeTracker = createShapeTracker(shape_copy, size);
+  if (!x->shapeTracker) {
+    free(x->data);
+    free(shape_copy);
+    free(x);
+    return NULL;
+  }
+
+  return x;
+}
 
 Buffer *full_like(Buffer *buf, float value) {
   float *data = (float *)malloc(buf->shapeTracker->size * sizeof(float));
@@ -14,7 +58,12 @@ Buffer *full_like(Buffer *buf, float value) {
     data[i] = value;
   }
 
-  return createBuffer(data, buf->shapeTracker->shape, buf->shapeTracker->size);
+  Buffer *new_buf =
+      createBuffer(data, buf->shapeTracker->shape, buf->shapeTracker->size);
+  if (!new_buf) {
+    free(data); // Free data if buffer creation failed
+  }
+  return new_buf;
 }
 
 Buffer *uniformBuffer(int *shape, int size, int min, int max) {
@@ -26,52 +75,26 @@ Buffer *uniformBuffer(int *shape, int size, int min, int max) {
   for (int i = 0; i < size; i++) {
     data[i] = rand() % (max - min + 1) + min;
   }
-  return createBuffer(data, shape, size);
-}
 
-Buffer *createBuffer(float *data, int *shape, int size) {
-  Buffer *x = (Buffer *)malloc(sizeof(Buffer));
-  if (!x) {
-    fprintf(stderr, "Failed to allocate memory for Buffer\n");
-    exit(EXIT_FAILURE);
+  Buffer *new_buf = createBuffer(data, shape, size);
+  if (!new_buf) {
+    free(data); // Free data if buffer creation failed
   }
-
-  x->data = data;
-  x->shapeTracker = createShapeTracker(shape, size);
-
-  if (!x->shapeTracker) {
-    free(x);
-    return NULL;
-  }
-
-  return x;
-}
-
-int calculateIndex(ShapeTracker *st, int *indices) {
-  int index = 0;
-  for (int i = 0; i < st->ndim; i++) {
-    if (indices[i] < 0 || indices[i] >= st->shape[i]) {
-      fprintf(stderr, "Index %d out of bounds for dimension %d.\n", indices[i],
-              i);
-      return -1; // Return -1 or another error code to indicate an out-of-bounds
-                 // index
-    }
-    index += indices[i] * st->strides[i];
-  }
-  return index;
-}
-
-// Function to access data in a Buffer based on an array of indices
-float index(Buffer *buf, int *indices) {
-  int idx = calculateIndex(buf->shapeTracker, indices);
-  if (idx == -1) {
-    fprintf(stderr, "Invalid index.\n");
-    return 0; // Handle error appropriately
-  }
-  return buf->data[idx];
+  return new_buf;
 }
 
 void freeBuffer(Buffer *buffer) {
-  freeShapeTracker(buffer->shapeTracker);
-  free(buffer);
+  if (buffer) {
+    if (buffer->data) {
+      free(buffer->data);
+    }
+    if (buffer->shapeTracker) {
+      if (buffer->shapeTracker->shape) {
+        free(buffer->shapeTracker->shape);
+      }
+      freeShapeTracker(buffer->shapeTracker);
+    }
+    free(buffer);
+  }
 }
+
