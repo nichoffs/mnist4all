@@ -2,8 +2,6 @@ from __future__ import annotations
 import numpy as np
 from typing import Callable, List, Union
 
-# TODO: should i return in backward?
-
 
 class Function:
     def __init__(self, *tensors: Tensor):
