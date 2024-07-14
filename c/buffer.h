@@ -8,7 +8,8 @@ typedef struct Buffer {
   ShapeTracker *shapeTracker;
 } Buffer;
 
-Buffer *createBuffer(float *data, int *shape);
+Buffer *createBuffer(float *data, int *shape, int size);
+float index(Buffer *buf, int *indices);
 void freeBuffer(Buffer *buffer);
 
 #endif // BUFFER_H

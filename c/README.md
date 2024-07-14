@@ -6,7 +6,7 @@
 
 ## Initialization:
 
-- [ ] Array (single dim with input shape)
+- [x] Array
 - [ ] Uniform
 - [ ] Full Like
 
@@ -31,6 +31,8 @@
 
 ## Movement:
 
+Should be zero copy wherever possible.
+
 - [ ] Reshape
 - [ ] Transpose
-- [ ] (Relatively) Fancy-Indexing
+- [ ] Indexing

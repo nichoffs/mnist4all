@@ -4,14 +4,13 @@
 typedef struct ShapeTracker {
   int *shape;
   int *strides;
+  int size;
   int ndim;
-  int numel;
 } ShapeTracker;
 
 int calculate_ndim(int *shape);
-int calculate_numel(int *shape, int ndim);
 int *calculate_strides(int *shape, int ndim);
-ShapeTracker *createShapeTracker(int *shape);
+ShapeTracker *createShapeTracker(int *shape, int size);
 void freeShapeTracker(ShapeTracker *st);
 
 #endif // SHAPETRACKER_H
