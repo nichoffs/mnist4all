@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// strides are reverse cumprod of shapes
 int *calculate_strides(int *shape, int ndim) {
   int *strides = (int *)malloc(ndim * sizeof(int));
   if (!strides) {

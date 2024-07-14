@@ -1,14 +1,11 @@
 # List of operations needed:
 
-## Utils:
-
-- [ ] from_numpy
 
 ## Initialization:
 
 - [x] Array
-- [ ] Uniform
-- [ ] Full Like
+- [x] Uniform
+- [x] Full Like
 
 ## Element-wise:
 

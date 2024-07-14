@@ -100,10 +100,42 @@ void test_buffer_memory_management() {
   printf("Buffer memory management tests passed!\n");
 }
 
+void test_full_like() {
+  printf("Testing full_like function...\n");
+
+  // Create an initial buffer
+  float data[] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0};
+  int shape[] = {2, 3, 0}; // 2x3 matrix
+  Buffer *buf = createBuffer(data, shape, 6);
+
+  // Test full_like function
+  float fill_value = 7.5;
+  Buffer *new_buf = full_like(buf, fill_value);
+
+  // Verify the new buffer
+  assert(new_buf != NULL);
+  assert(new_buf->shapeTracker != NULL);
+  assert(new_buf->shapeTracker->ndim == buf->shapeTracker->ndim);
+  assert(new_buf->shapeTracker->shape[0] == buf->shapeTracker->shape[0]);
+  assert(new_buf->shapeTracker->shape[1] == buf->shapeTracker->shape[1]);
+  assert(new_buf->shapeTracker->strides[0] == buf->shapeTracker->strides[0]);
+  assert(new_buf->shapeTracker->strides[1] == buf->shapeTracker->strides[1]);
+
+  for (int i = 0; i < 6; i++) {
+    assert(new_buf->data[i] == fill_value);
+  }
+
+  freeBuffer(buf);
+  freeBuffer(new_buf);
+
+  printf("full_like tests passed!\n");
+}
+
 int main() {
   test_buffer_creation();
   test_buffer_indexing();
   test_buffer_memory_management();
+  test_full_like();
 
   printf("All buffer tests passed successfully!\n");
   return 0;

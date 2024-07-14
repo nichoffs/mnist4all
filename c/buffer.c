@@ -3,6 +3,32 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+Buffer *full_like(Buffer *buf, float value) {
+  float *data = (float *)malloc(buf->shapeTracker->size * sizeof(float));
+  if (!data) {
+    fprintf(stderr, "Failed to allocate memory for data\n");
+    return NULL;
+  }
+
+  for (int i = 0; i < buf->shapeTracker->size; i++) {
+    data[i] = value;
+  }
+
+  return createBuffer(data, buf->shapeTracker->shape, buf->shapeTracker->size);
+}
+
+Buffer *uniformBuffer(int *shape, int size, int min, int max) {
+  float *data = (float *)malloc(size * sizeof(float));
+  if (!data) {
+    fprintf(stderr, "Failed to allocate memory for data\n");
+    return NULL;
+  }
+  for (int i = 0; i < size; i++) {
+    data[i] = rand() % (max - min + 1) + min;
+  }
+  return createBuffer(data, shape, size);
+}
+
 Buffer *createBuffer(float *data, int *shape, int size) {
   Buffer *x = (Buffer *)malloc(sizeof(Buffer));
   if (!x) {
