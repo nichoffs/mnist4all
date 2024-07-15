@@ -11,14 +11,14 @@
 
 ### Unary:
 
-- [ ] Square Root
-- [ ] Logarithm
-- [ ] Exponent
+- [x] Square Root
+- [x] Logarithm
+- [x] Exponent
 
 ### Binary:
 
 - [ ] Dot (Use mul-sum reshaping/broadcasting version)
-- [ ] Mul
+- [x] Mul
 
 ## Reduce:
 
@@ -34,8 +34,15 @@ Should be zero copy wherever possible.
 - [ ] Transpose
 - [ ] Indexing
 
+# Unnecessary ops that I added
+
+- [x] Add
+- [x] Sub
+- [x] Mul
+
 # TODO
 
 - [ ] Address Todos
 - [ ] Pretty-Printing
+- [ ] Maybe remove unnecessary ops
 
