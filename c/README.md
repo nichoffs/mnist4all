@@ -12,8 +12,8 @@
 ### Unary:
 
 - [ ] Square Root
-- [ ] Log
-- [ ] Exp
+- [ ] Logarithm
+- [ ] Exponent
 
 ### Binary:
 
@@ -33,3 +33,9 @@ Should be zero copy wherever possible.
 - [ ] Reshape
 - [ ] Transpose
 - [ ] Indexing
+
+# TODO
+
+- [ ] Address Todos
+- [ ] Pretty-Printing
+

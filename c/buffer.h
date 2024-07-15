@@ -9,9 +9,8 @@ typedef struct Buffer {
 } Buffer;
 
 Buffer *full_like(Buffer *buf, float value);
-Buffer *uniformBuffer(int *shape, int size, int min, int max);
+Buffer *uniform(int *shape, int size, int min, int max);
 Buffer *createBuffer(float *data, int *shape, int size);
-float index(Buffer *buf, int *indices);
 void freeBuffer(Buffer *buffer);
 
 #endif // BUFFER_H

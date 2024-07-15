@@ -3,9 +3,9 @@
 
 // Unary Ops
 
-Buffer *sqrt(Buffer *buf);
-Buffer *log(Buffer *buf);
-Buffer *exp(Buffer *buf);
+Buffer *square_root(Buffer *buf);
+Buffer *logarithm(Buffer *buf);
+Buffer *exponent(Buffer *buf);
 
 // Binary Ops
 
@@ -14,5 +14,5 @@ Buffer *exp(Buffer *buf);
 // Movement Ops
 
 int calculateIndex(ShapeTracker *st, int *indices);
-float index(Buffer *buf, int *indices);
+float indexBuffer(Buffer *buf, int *indices);
 

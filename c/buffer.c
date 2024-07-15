@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+// TODO: Eliminate data memcpy and just insist that any data passed in is
+// mallocd so it can be cleared but we still don't need to copy
+
 Buffer *createBuffer(float *data, int *shape, int size) {
   Buffer *x = (Buffer *)malloc(sizeof(Buffer));
   if (!x) {
@@ -11,67 +14,83 @@ Buffer *createBuffer(float *data, int *shape, int size) {
     return NULL;
   }
 
-  x->data = (float *)malloc(size * sizeof(float));
-  if (!x->data) {
-    fprintf(stderr, "Failed to allocate memory for Buffer data\n");
+  if (data == NULL) {
+    fprintf(stderr, "Input data was not allocated properly!\n");
     free(x);
     return NULL;
   }
 
-  if (data != NULL) {
-    memcpy(x->data, data, size * sizeof(float));
-  }
+  x->data = data;
 
   int ndim = 0;
   while (shape[ndim] != 0) {
     ndim++;
   }
 
-  int *shape_copy = (int *)malloc((ndim + 1) * sizeof(int));
-  if (!shape_copy) {
-    fprintf(stderr, "Failed to allocate memory for shape\n");
+  if (shape == NULL) {
+    fprintf(stderr, "Shape was not allocated properly!");
     free(x->data);
     free(x);
     return NULL;
   }
-  memcpy(shape_copy, shape, (ndim + 1) * sizeof(int));
 
-  x->shapeTracker = createShapeTracker(shape_copy, size);
+  x->shapeTracker = createShapeTracker(shape, size);
   if (!x->shapeTracker) {
     free(x->data);
-    free(shape_copy);
     free(x);
     return NULL;
   }
-
   return x;
 }
 
 Buffer *full_like(Buffer *buf, float value) {
+  if (!buf) {
+    fprintf(stderr, "Buffer is NULL");
+    return NULL;
+  }
+
   float *data = (float *)malloc(buf->shapeTracker->size * sizeof(float));
   if (!data) {
     fprintf(stderr, "Failed to allocate memory for data\n");
     return NULL;
   }
-
   for (int i = 0; i < buf->shapeTracker->size; i++) {
     data[i] = value;
   }
 
-  Buffer *new_buf =
-      createBuffer(data, buf->shapeTracker->shape, buf->shapeTracker->size);
+  // + 1 for the sentinel value
+  int *shape = (int *)malloc((buf->shapeTracker->ndim + 1) * sizeof(int));
+  if (!shape) {
+    fprintf(stderr, "Failed to allocate memory for shape\n");
+    return NULL;
+  }
+  for (int i = 0; i < buf->shapeTracker->ndim; i++) {
+    shape[i] = buf->shapeTracker->shape[i];
+  }
+
+  Buffer *new_buf = createBuffer(data, shape, buf->shapeTracker->size);
+
   if (!new_buf) {
     free(data); // Free data if buffer creation failed
   }
+
   return new_buf;
 }
 
-Buffer *uniformBuffer(int *shape, int size, int min, int max) {
+// TODO: THIS IS CURRENTLY GENERATING ONLY INTS IN THE RANGE AND INCLUDES TOP -
+// FIX assumes shape was mallocd
+Buffer *uniform(int *shape, int size, int min, int max) {
   float *data = (float *)malloc(size * sizeof(float));
   if (!data) {
     fprintf(stderr, "Failed to allocate memory for data\n");
     return NULL;
   }
+
+  if (!shape) {
+    fprintf(stderr, "Shape data was null!\n");
+    return NULL;
+  }
+
   for (int i = 0; i < size; i++) {
     data[i] = rand() % (max - min + 1) + min;
   }
@@ -79,6 +98,8 @@ Buffer *uniformBuffer(int *shape, int size, int min, int max) {
   Buffer *new_buf = createBuffer(data, shape, size);
   if (!new_buf) {
     free(data); // Free data if buffer creation failed
+    free(shape);
+    return NULL;
   }
   return new_buf;
 }
@@ -97,4 +118,3 @@ void freeBuffer(Buffer *buffer) {
     free(buffer);
   }
 }
-

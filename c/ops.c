@@ -1,13 +1,36 @@
 #include "ops.h"
+#include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 // Unary Ops
 
-/* Buffer *sqrt(Buffer *buf) { */
-/*   for (int i = 0; i < buf->shapeTracker->size; i++) { */
-/*     buf->data */
-/*   } */
-/* } */
+Buffer *square_root(Buffer *buf) {
+  int size = buf->shapeTracker->size;
+
+  float *data = (float *)malloc(size * sizeof(float));
+  int *shape = (int *)malloc((buf->shapeTracker->ndim + 1) * sizeof(int));
+
+  // Copy data and shape correctly
+  memcpy(data, buf->data, size * sizeof(float));
+  memcpy(shape, buf->shapeTracker->shape,
+         (buf->shapeTracker->ndim + 1) * sizeof(int));
+
+  Buffer *new_buf = createBuffer(data, shape, size);
+  if (!new_buf) {
+    free(data);
+    free(shape);
+    return NULL;
+  }
+
+  // Calculate the square root for the new buffer's data
+  for (int i = 0; i < size; i++) {
+    new_buf->data[i] = sqrt(buf->data[i]);
+  }
+
+  return new_buf;
+}
 
 // Movement Ops
 
@@ -24,7 +47,7 @@ int calculateIndex(ShapeTracker *st, int *indices) {
   return index;
 }
 
-float index(Buffer *buf, int *indices) {
+float indexBuffer(Buffer *buf, int *indices) {
   int idx = calculateIndex(buf->shapeTracker, indices);
   if (idx == -1) {
     fprintf(stderr, "Invalid index.\n");
