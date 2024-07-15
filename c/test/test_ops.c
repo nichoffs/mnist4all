@@ -4,13 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void printBuffer(Buffer *buf) {
-  for (int i = 0; i < buf->shapeTracker->size; i++) {
-    printf("%f ", buf->data[i]);
-  }
-  printf("\n");
-}
-
 int main() {
 
   // VALIDATE SQUARE ROOT
@@ -51,6 +44,7 @@ int main() {
     printf("Buf1: %f, Buf2: %f, Sum: %f\n", buf1->data[i], buf2->data[i],
            add_res->data[i]);
   }
+  printBuffer(buf1);
 
   // Clean up
   /* freeBuffer(buf); */

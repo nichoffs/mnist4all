@@ -11,6 +11,7 @@ typedef struct Buffer {
 Buffer *full_like(Buffer *buf, float value);
 Buffer *uniform(int *shape, int size, int min, int max);
 Buffer *createBuffer(float *data, int *shape, int size);
+void printBuffer(Buffer *buf);
 void freeBuffer(Buffer *buffer);
 
 #endif // BUFFER_H

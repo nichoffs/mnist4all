@@ -40,6 +40,54 @@ Buffer *createBuffer(float *data, int *shape, int size) {
   return x;
 }
 
+static void printData(Buffer *buf, int dim, int offset) {
+  int ndim = buf->shapeTracker->ndim;
+  int *shape = buf->shapeTracker->shape;
+  float *data = buf->data;
+
+  if (dim == ndim - 1) {
+    printf("[");
+    for (int i = 0; i < shape[dim]; i++) {
+      printf("%f", data[offset + i]);
+      if (i < shape[dim] - 1) {
+        printf(", ");
+      }
+    }
+    printf("]");
+  } else {
+    printf("[");
+    int stride = buf->shapeTracker->strides[dim];
+    for (int i = 0; i < shape[dim]; i++) {
+      printData(buf, dim + 1, offset + i * stride);
+      if (i < shape[dim] - 1) {
+        printf(",\n");
+        for (int j = 0; j <= dim; j++) {
+          printf(" ");
+        }
+      }
+    }
+    printf("]");
+  }
+}
+
+void printBuffer(Buffer *buf) {
+  if (!buf || !buf->data || !buf->shapeTracker) {
+    fprintf(stderr, "Buffer or its data/shapeTracker is NULL\n");
+    return;
+  }
+
+  int ndim = buf->shapeTracker->ndim;
+  int *shape = buf->shapeTracker->shape;
+
+  if (ndim == 0) {
+    printf("[]\n");
+    return;
+  }
+
+  printData(buf, 0, 0);
+  printf("\n");
+}
+
 Buffer *full_like(Buffer *buf, float value) {
   if (!buf) {
     fprintf(stderr, "Buffer is NULL");
@@ -59,16 +107,18 @@ Buffer *full_like(Buffer *buf, float value) {
   int *shape = (int *)malloc((buf->shapeTracker->ndim + 1) * sizeof(int));
   if (!shape) {
     fprintf(stderr, "Failed to allocate memory for shape\n");
+    free(data);
     return NULL;
   }
   for (int i = 0; i < buf->shapeTracker->ndim; i++) {
     shape[i] = buf->shapeTracker->shape[i];
   }
+  shape[buf->shapeTracker->ndim] = 0; // Null-terminate the shape array
 
   Buffer *new_buf = createBuffer(data, shape, buf->shapeTracker->size);
-
   if (!new_buf) {
     free(data); // Free data if buffer creation failed
+    free(shape);
   }
 
   return new_buf;
@@ -115,3 +165,4 @@ void freeBuffer(Buffer *buffer) {
     free(buffer);
   }
 }
+
