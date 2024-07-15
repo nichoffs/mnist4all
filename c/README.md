@@ -43,6 +43,6 @@ Should be zero copy wherever possible.
 # TODO
 
 - [ ] Address Todos
-- [ ] Pretty-Printing
+- [x] Pretty-Printing
 - [ ] Maybe remove unnecessary ops
 
