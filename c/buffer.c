@@ -4,9 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-// TODO: Eliminate data memcpy and just insist that any data passed in is
-// mallocd so it can be cleared but we still don't need to copy
-
 Buffer *createBuffer(float *data, int *shape, int size) {
   Buffer *x = (Buffer *)malloc(sizeof(Buffer));
   if (!x) {

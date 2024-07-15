@@ -9,6 +9,11 @@ Buffer *exponent(Buffer *buf);
 
 // Binary Ops
 
+Buffer *add(Buffer *buf1, Buffer *buf2);
+Buffer *sub(Buffer *buf1, Buffer *buf2);
+Buffer *mul(Buffer *buf1, Buffer *buf2);
+Buffer *divide(Buffer *buf1, Buffer *buf2);
+
 // Reduce Ops
 
 // Movement Ops
