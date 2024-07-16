@@ -23,6 +23,7 @@
 ## Reduce:
 
 - [ ] Sum
+- [ ] Sum along axis
 - [ ] Max
 
 
@@ -32,7 +33,8 @@ Should be zero copy wherever possible.
 
 - [ ] Reshape
 - [ ] Transpose
-- [ ] Indexing
+- [ ] Indexing single element
+- [ ] Indexing single axis
 
 # Unnecessary ops that I added
 

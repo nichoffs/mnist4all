@@ -5,8 +5,6 @@
 #include <string.h>
 
 // Unary Ops
-
-// Unary operation function
 Buffer *unary_op(Buffer *buf, UnaryOpFunc op_func) {
   Buffer *new_buf = copyBuffer(buf);
   if (!new_buf) {
@@ -22,14 +20,11 @@ Buffer *unary_op(Buffer *buf, UnaryOpFunc op_func) {
 }
 
 Buffer *square_root(Buffer *buf) { return unary_op(buf, sqrtf); }
-
 Buffer *logarithm(Buffer *buf) { return unary_op(buf, logf); }
-
 Buffer *exponent(Buffer *buf) { return unary_op(buf, expf); }
 
 // Binary Op
-
-// TODO: CHECK SHAPES
+// TODO: CHECK INPUT SHAPES EQUAL
 Buffer *binary_op(Buffer *buf1, Buffer *buf2, BinaryOpFunc op_func) {
   Buffer *new_buf = copyBuffer(buf1);
 
@@ -44,29 +39,75 @@ Buffer *binary_op(Buffer *buf1, Buffer *buf2, BinaryOpFunc op_func) {
   return new_buf;
 }
 
+// TOOD: Should I inline these in header file?
 float add_func(float a, float b) { return a + b; }
-
 float sub_func(float a, float b) { return a - b; }
-
 float mul_func(float a, float b) { return a * b; }
-
 float div_func(float a, float b) { return a / b; }
 
 Buffer *add(Buffer *buf1, Buffer *buf2) {
   return binary_op(buf1, buf2, add_func);
 }
-
 Buffer *sub(Buffer *buf1, Buffer *buf2) {
   return binary_op(buf1, buf2, sub_func);
 }
-
 Buffer *mul(Buffer *buf1, Buffer *buf2) {
   return binary_op(buf1, buf2, mul_func);
 }
-
 Buffer *divide(Buffer *buf1, Buffer *buf2) {
   return binary_op(buf1, buf2, div_func);
 }
+
+// Reduce Ops
+
+Buffer *sum(Buffer *buf) {
+  int *newShape = malloc(sizeof(int));
+  float *data = malloc(sizeof(float));
+  if (!newShape || !data) {
+    fprintf(stderr, "Memory allocation failed.\n");
+    return NULL;
+  }
+  Buffer *sum = createBuffer(data, newShape, 1);
+  for (int i = 0; i < buf->shapeTracker->size; i++) {
+    sum->data[0] += buf->data[i];
+  }
+  return sum;
+}
+
+/* Buffer *sumAxis(Buffer *buf, int axis) { */
+/*   if (axis > buf->shapeTracker->ndim || axis <= 0) { */
+/*     fprintf(stderr, "Axis out of bounds.\n"); */
+/*     return NULL; */
+/*   } */
+/*   // Calculate new shappe and size */
+/*   int *newShape = (int *)malloc((buf->shapeTracker->ndim + 1) * sizeof(int));
+ */
+/*   if (!newShape) { */
+/*     fprintf(stderr, "Memory allocation failed.\n"); */
+/*     return NULL; */
+/*   } */
+/*   memcpy(newShape, buf->shapeTracker->shape, */
+/*          (buf->shapeTracker->ndim + 1) * sizeof(int)); */
+/*   int shape_downsize; */
+/*   for (int i = 0; i < (buf->shapeTracker->ndim); i++) { */
+/*     if (i == axis) { */
+/*       shape_downsize = newShape[i]; */
+/*       newShape[i] = 1; */
+/*     } */
+/*   } */
+/**/
+/*   int new_size = buf->shapeTracker->size / shape_downsize; */
+/**/
+/*   // FINISH SUM ALONG AXIS */
+/**/
+/*   for (int i = 0; i < buf->shapeTracker->size; i++) { */
+/*   } */
+/*   return sum; */
+/* } */
+
+/* int sumAxis(Buffer *buf, int axis) { */
+/**/
+/* } */
 
 // Movement Ops
 

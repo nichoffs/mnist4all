@@ -19,8 +19,12 @@ Buffer *divide(Buffer *buf1, Buffer *buf2);
 
 // Reduce Ops
 
+Buffer *sum(Buffer *buf);
+Buffer *sumAxis(Buffer *buf, int axis);
+
 // Movement Ops
 
 int calculateIndex(ShapeTracker *st, int *indices);
 float indexBuffer(Buffer *buf, int *indices);
+Buffer* reshape(Buffer* buf, int *shape);
 
