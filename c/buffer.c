@@ -4,6 +4,36 @@
 #include <stdlib.h>
 #include <string.h>
 
+Buffer *copyBuffer(Buffer *buf) {
+  int size = buf->shapeTracker->size;
+
+  float *data = (float *)malloc(size * sizeof(float));
+  if (data == NULL) {
+    fprintf(stderr, "Memory allocation failed for data\n");
+    return NULL;
+  }
+  memcpy(data, buf->data, size * sizeof(float));
+
+  int shapeSize = (buf->shapeTracker->ndim + 1) * sizeof(int);
+  int *shape = (int *)malloc(shapeSize);
+  if (shape == NULL) {
+    fprintf(stderr, "Memory allocation failed for shape\n");
+    free(data);
+    return NULL;
+  }
+  memcpy(shape, buf->shapeTracker->shape, shapeSize);
+
+  Buffer *new_buf = createBuffer(data, shape, size);
+
+  if (new_buf == NULL) {
+    free(data);
+    free(shape);
+    return NULL;
+  }
+
+  return new_buf;
+}
+
 Buffer *createBuffer(float *data, int *shape, int size) {
   Buffer *x = (Buffer *)malloc(sizeof(Buffer));
   if (!x) {
@@ -124,9 +154,9 @@ Buffer *full_like(Buffer *buf, float value) {
   return new_buf;
 }
 
-// TODO: THIS IS CURRENTLY GENERATING ONLY INTS IN THE RANGE AND INCLUDES TOP -
-// FIX assumes shape was mallocd
-Buffer *uniform(int *shape, int size, int min, int max) {
+// FIX: The randint is inclusive on upper bound and exclusive on lower bound
+// -- Should be opposite
+Buffer *randint(int *shape, int size, int min, int max) {
   float *data = (float *)malloc(size * sizeof(float));
   if (!data) {
     fprintf(stderr, "Failed to allocate memory for data\n");
@@ -144,7 +174,7 @@ Buffer *uniform(int *shape, int size, int min, int max) {
 
   Buffer *new_buf = createBuffer(data, shape, size);
   if (!new_buf) {
-    free(data); // Free data if buffer creation failed
+    free(data);
     free(shape);
     return NULL;
   }
@@ -157,12 +187,8 @@ void freeBuffer(Buffer *buffer) {
       free(buffer->data);
     }
     if (buffer->shapeTracker) {
-      if (buffer->shapeTracker->shape) {
-        free(buffer->shapeTracker->shape);
-      }
       freeShapeTracker(buffer->shapeTracker);
     }
     free(buffer);
   }
 }
-

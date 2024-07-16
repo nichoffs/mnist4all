@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int main() {
 
@@ -27,31 +28,29 @@ int main() {
 
   // VALIDATE ADDITION
 
+  // INITIALIZE ADDING ARRAYS
   float *data1 = (float *)malloc(size * sizeof(float));
   float *data2 = (float *)malloc(size * sizeof(float));
-  for (int i = 0; i < size; i++) {
-    data1[i] = (float)i;
-    data2[i] = (float)(size - i);
-    printf("Data1: %f, Data2: %f\n", data1[i], data2[i]);
-  }
+  int *shape1 = (int *)malloc(3 * sizeof(int));
+  int *shape2 = (int *)malloc(3 * sizeof(int));
+  memcpy(shape1, shape, 3 * sizeof(int));
+  memcpy(shape2, shape, 3 * sizeof(int));
+  Buffer *buf1 = createBuffer(data1, shape1, size);
+  Buffer *buf2 = createBuffer(data2, shape2, size);
 
-  Buffer *buf1 = createBuffer(data1, shape, size);
-  Buffer *buf2 = createBuffer(data2, shape, size);
+  // PERFORM ADDITION - ADDS SHOULD EQUAL 10
 
   Buffer *add_res = add(buf1, buf2);
-
   for (int i = 0; i < size; i++) {
     printf("Buf1: %f, Buf2: %f, Sum: %f\n", buf1->data[i], buf2->data[i],
            add_res->data[i]);
   }
-  printBuffer(buf1);
 
-  // Clean up
-  /* freeBuffer(buf); */
-  /* freeBuffer(res); */
-  /* freeBuffer(buf1); */
-  /* freeBuffer(buf2); */
-  /* freeBuffer(add_res); */
+  freeBuffer(buf);
+  freeBuffer(res);
+  freeBuffer(buf1);
+  freeBuffer(buf2);
+  freeBuffer(add_res);
 
   return 0;
 }

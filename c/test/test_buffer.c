@@ -76,14 +76,14 @@ int main() {
   assert(buf_3_like->data[3] == 5.0);
   assert(buf_3_like->shapeTracker->size == 6);
 
-  // VALIDATE UNIFORM
+  // VALIDATE RANDINT
 
   int size_4 = 6;
   int *shape_4 = (int *)malloc(3 * sizeof(int));
   shape_4[0] = 2;
   shape_4[1] = 3;
   shape_4[2] = 0;
-  Buffer *buf_4 = uniform(shape_4, size_4, 3, 5);
+  Buffer *buf_4 = randint(shape_4, size_4, 3, 5);
 
   assert(buf_4 != NULL);
   assert(buf_4->shapeTracker != NULL);

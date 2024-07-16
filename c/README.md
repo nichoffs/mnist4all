@@ -42,7 +42,7 @@ Should be zero copy wherever possible.
 
 # TODO
 
-- [ ] Address Todos
+- [x] Address Todos
 - [x] Pretty-Printing
 - [ ] Maybe remove unnecessary ops
 

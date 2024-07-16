@@ -1,8 +1,14 @@
 #include "shapetracker.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-// TODO: fix freeShapeTracker and ShapeTracker to allocate on heap
+ShapeTracker *copyShapeTracker(ShapeTracker *st) {
+  int *newShape = (int *)malloc((st->ndim + 1) * sizeof(int));
+  memcpy(newShape, st->shape, (st->ndim + 1) * sizeof(int));
+  ShapeTracker *newShapeTracker = createShapeTracker(newShape, st->size);
+  return newShapeTracker;
+}
 
 // strides are reverse cumprod of shapes
 int *calculate_strides(int *shape, int ndim) {
@@ -56,29 +62,23 @@ ShapeTracker *createShapeTracker(int *shape, int size) {
   st->shape = shape;
   st->size = size;
   st->strides = calculate_strides(shape, st->ndim);
-  if (!st->strides) { // Check if strides allocation failed
-    free(st);         // Free ShapeTracker allocation
+  if (!st->strides) {
+    free(st->shape);
+    free(st);
     return NULL;
   }
 
-  if (!verifyShape(shape, st->ndim,
-                   size)) { // Check if shape verification failed
-    free(st->strides);      // Free strides
-    free(st);               // Free ShapeTracker allocation
+  if (!verifyShape(shape, st->ndim, size)) {
+    freeShapeTracker(st);
     return NULL;
   }
-
-  /* printf("ShapeTracker created with %d dimensions.\n", st->ndim); */
-  /* for (int i = 0; i < st->ndim; i++) { */
-  /*   printf("Shape[%d] = %d, Strides[%d] = %d\n", i, st->shape[i], i, */
-  /*          st->strides[i]); */
-  /* } */
 
   return st;
 }
 
 void freeShapeTracker(ShapeTracker *st) {
   if (st) {
+    free(st->shape);
     free(st->strides); // Ensure to free strides
     free(st);          // Then free the ShapeTracker itself
   }
