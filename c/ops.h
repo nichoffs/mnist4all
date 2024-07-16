@@ -3,6 +3,9 @@
 
 // Unary Ops
 
+typedef float (*UnaryOpFunc)(float);
+typedef float (*BinaryOpFunc)(float, float);
+
 Buffer *square_root(Buffer *buf);
 Buffer *logarithm(Buffer *buf);
 Buffer *exponent(Buffer *buf);

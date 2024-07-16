@@ -6,10 +6,6 @@
 
 // Unary Ops
 
-// Define the type for a unary operation function
-typedef float (*UnaryOpFunc)(float);
-typedef float (*BinaryOpFunc)(float, float);
-
 // Unary operation function
 Buffer *unary_op(Buffer *buf, UnaryOpFunc op_func) {
   Buffer *new_buf = copyBuffer(buf);
