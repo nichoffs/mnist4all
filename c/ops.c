@@ -1,8 +1,11 @@
 #include "ops.h"
+#include "utils.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+// Load Ops
 
 // Unary Ops
 Buffer *unary_op(Buffer *buf, UnaryOpFunc op_func) {
@@ -24,12 +27,22 @@ Buffer *logarithm(Buffer *buf) { return unary_op(buf, logf); }
 Buffer *exponent(Buffer *buf) { return unary_op(buf, expf); }
 
 // Binary Op
-// TODO: CHECK INPUT SHAPES EQUAL
 Buffer *binary_op(Buffer *buf1, Buffer *buf2, BinaryOpFunc op_func) {
   Buffer *new_buf = copyBuffer(buf1);
 
   if (new_buf == NULL) {
     return NULL;
+  }
+
+  for (int i = 0; i < buf1->shapeTracker->ndim + 1; i++) {
+    if (buf1->shapeTracker->ndim != buf2->shapeTracker->ndim) {
+      printf("Number of dimensions for binary op don't match\n");
+      return NULL;
+    }
+    if (buf1->shapeTracker->shape[i] != buf2->shapeTracker->shape[i]) {
+      printf("Shapes for binary op don't match\n");
+      return NULL;
+    }
   }
 
   for (int i = 0; i < new_buf->shapeTracker->size; i++) {
@@ -39,7 +52,6 @@ Buffer *binary_op(Buffer *buf1, Buffer *buf2, BinaryOpFunc op_func) {
   return new_buf;
 }
 
-// TOOD: Should I inline these in header file?
 float add_func(float a, float b) { return a + b; }
 float sub_func(float a, float b) { return a - b; }
 float mul_func(float a, float b) { return a * b; }
@@ -61,56 +73,25 @@ Buffer *divide(Buffer *buf1, Buffer *buf2) {
 // Reduce Ops
 
 Buffer *sum(Buffer *buf) {
-  int *newShape = malloc(sizeof(int));
+  // init shape on stack because it's copied anyway
+  int newShape[2] = {1, 0};
   float *data = malloc(sizeof(float));
-  if (!newShape || !data) {
-    fprintf(stderr, "Memory allocation failed.\n");
+  if (!data) {
+    reportMemoryError("sum data or shape");
     return NULL;
   }
-  Buffer *sum = createBuffer(data, newShape, 1);
+  newShape[0] = 1;
+  newShape[1] = 0;
+  Buffer *sum = initBuffer(data, newShape, 1, false);
   for (int i = 0; i < buf->shapeTracker->size; i++) {
     sum->data[0] += buf->data[i];
   }
   return sum;
 }
 
-/* Buffer *sumAxis(Buffer *buf, int axis) { */
-/*   if (axis > buf->shapeTracker->ndim || axis <= 0) { */
-/*     fprintf(stderr, "Axis out of bounds.\n"); */
-/*     return NULL; */
-/*   } */
-/*   // Calculate new shappe and size */
-/*   int *newShape = (int *)malloc((buf->shapeTracker->ndim + 1) * sizeof(int));
- */
-/*   if (!newShape) { */
-/*     fprintf(stderr, "Memory allocation failed.\n"); */
-/*     return NULL; */
-/*   } */
-/*   memcpy(newShape, buf->shapeTracker->shape, */
-/*          (buf->shapeTracker->ndim + 1) * sizeof(int)); */
-/*   int shape_downsize; */
-/*   for (int i = 0; i < (buf->shapeTracker->ndim); i++) { */
-/*     if (i == axis) { */
-/*       shape_downsize = newShape[i]; */
-/*       newShape[i] = 1; */
-/*     } */
-/*   } */
-/**/
-/*   int new_size = buf->shapeTracker->size / shape_downsize; */
-/**/
-/*   // FINISH SUM ALONG AXIS */
-/**/
-/*   for (int i = 0; i < buf->shapeTracker->size; i++) { */
-/*   } */
-/*   return sum; */
-/* } */
-
-/* int sumAxis(Buffer *buf, int axis) { */
-/**/
-/* } */
-
 // Movement Ops
 
+// assumes input with slice along each axis
 int calculateIndex(ShapeTracker *st, int *indices) {
   int index = 0;
   for (int i = 0; i < st->ndim; i++) {
@@ -132,3 +113,30 @@ float indexBuffer(Buffer *buf, int *indices) {
   }
   return buf->data[idx];
 }
+
+// TODO: Figure out error handling
+int *validateSliceIndices(ShapeTracker *st, int *slices) {
+  for (int i = 0; i < st->ndim; i++) {
+    int start = slices[i][0];
+    int end = slices[i][1];
+    if (start < 0 || end > st->shape[i] || start >= end) {
+      fprintf(stderr, "Invalid slice indices [%d, %d] for dimension %d.\n",
+              start, end, i);
+      return 0;
+    }
+  }
+  return 1;
+}
+
+Buffer *sliceBuffer(Buffer *buf, int *slices) {
+  if (!buf || !slices) {
+    reportMemoryError("buffer or indices");
+    return NULL;
+  }
+  if (!validateSliceIndices(buf->shapeTracker, slices)) {
+    printf("Invalid slice indices\n");
+    return NULL;
+  }
+}
+
+/* Buffer *indexAxisBuffer(Buffer *buf, int axis, int index) {} */

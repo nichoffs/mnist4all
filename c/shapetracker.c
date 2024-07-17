@@ -1,38 +1,8 @@
 #include "shapetracker.h"
+#include "utils.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-ShapeTracker *copyShapeTracker(ShapeTracker *st) {
-  int *newShape = (int *)malloc((st->ndim + 1) * sizeof(int));
-  memcpy(newShape, st->shape, (st->ndim + 1) * sizeof(int));
-  ShapeTracker *newShapeTracker = createShapeTracker(newShape, st->size);
-  return newShapeTracker;
-}
-
-// strides are reverse cumprod of shapes
-int *calculate_strides(int *shape, int ndim) {
-  int *strides = (int *)malloc(ndim * sizeof(int));
-  if (!strides) {
-    return NULL; // Return NULL if memory allocation fails
-  }
-  for (int i = ndim - 1; i >= 0; i--) {
-    if (i == ndim - 1) {
-      strides[i] = 1;
-    } else {
-      strides[i] = shape[i + 1] * strides[i + 1];
-    }
-  }
-  return strides;
-}
-
-int calculate_ndim(int *shape) {
-  int ndim = 0;
-  while (shape[ndim] != 0) {
-    ndim++;
-  }
-  return ndim;
-}
 
 int verifyShape(int *shape, int ndim, int size) {
   int numEl = 1;
@@ -51,20 +21,50 @@ int verifyShape(int *shape, int ndim, int size) {
   return 1; // Return 1 on success
 }
 
-ShapeTracker *createShapeTracker(int *shape, int size) {
-  ShapeTracker *st = (ShapeTracker *)malloc(sizeof(ShapeTracker));
-  if (!st) {
-    fprintf(stderr, "Failed to allocate memory for ShapeTracker\n");
-    return NULL; // Return NULL on allocation failure
+// strides are reverse cumprod of shapes
+int *_default_strides(int *shape, int ndim) {
+  int *strides = (int *)malloc(ndim * sizeof(int));
+  if (!strides) {
+    return NULL; // Return NULL if memory allocation fails
+  }
+  strides[ndim - 1] = 1;
+  for (int i = ndim - 2; i >= 0; --i) {
+    strides[i] = shape[i + 1] * strides[i + 1];
+  }
+  return strides;
+}
+
+int _calculate_ndim(int *shape) {
+  int ndim = 0;
+  while (shape[ndim] != 0) {
+    ndim++;
+  }
+  return ndim;
+}
+
+// Shape attribute data is always copied
+ShapeTracker *initShapeTracker(int *shape, int size) {
+
+  ShapeTracker *st = malloc(sizeof(ShapeTracker));
+  if (st == NULL) {
+    reportMemoryError("ShapeTracker");
+    return NULL;
   }
 
-  st->ndim = calculate_ndim(shape);
-  st->shape = shape;
-  st->size = size;
-  st->strides = calculate_strides(shape, st->ndim);
-  if (!st->strides) {
+  st->ndim = _calculate_ndim(shape);
+  st->shape = malloc((st->ndim + 1) * sizeof(int));
+  if (st->shape == NULL) {
+    free(st);
+    reportMemoryError("shape");
+    return NULL;
+  }
+  memcpy(st->shape, shape, (st->ndim + 1) * sizeof(int));
+
+  st->strides = _default_strides(shape, st->ndim);
+  if (st->strides == NULL) {
     free(st->shape);
     free(st);
+    reportMemoryError("strides");
     return NULL;
   }
 
@@ -73,6 +73,7 @@ ShapeTracker *createShapeTracker(int *shape, int size) {
     return NULL;
   }
 
+  st->size = size;
   return st;
 }
 

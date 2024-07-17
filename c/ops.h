@@ -1,6 +1,11 @@
 #include "buffer.h"
 #include "shapetracker.h"
 
+// Load Ops
+
+Buffer *full_like(Buffer *buf, float value);
+Buffer *randint(int *shape, int size, int min, int max);
+
 // Unary Ops
 
 typedef float (*UnaryOpFunc)(float);

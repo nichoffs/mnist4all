@@ -6,12 +6,12 @@ typedef struct ShapeTracker {
   int *strides;
   int size;
   int ndim;
+  int offset;
 } ShapeTracker;
 
 int calculate_ndim(int *shape);
-int *calculate_strides(int *shape, int ndim);
-ShapeTracker *createShapeTracker(int *shape, int size);
-ShapeTracker *copyShapeTracker(ShapeTracker *st);
+int *_default_strides(int *shape, int ndim);
+ShapeTracker *initShapeTracker(int *shape, int size);
 void freeShapeTracker(ShapeTracker *st);
 
 #endif // SHAPETRACKER_H
