@@ -1,5 +1,4 @@
-#include "buffer.h"
+#include <stdlib.h>
 
-void reportMemoryError(const char *type);
-static void _printData(Buffer *buf, int dim, int offset);
-void printBuffer(Buffer *buf);
+const void *safe_malloc(const size_t n);
+const void *safe_malloc_copy(const void *src, const size_t n);
