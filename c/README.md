@@ -6,4 +6,5 @@ It has two properties:
 - `float *data` - a contiguous piece of memory
 - `ShapeTracker st` - represents a "view" of the data - defines how operations occur on data and with which other buffers the buffer can interact
 
-A new `ShapeTracker` is created for every new `Buffer`, although data may remain constant when possible, i.e. movement ops.
+A new `ShapeTracker` is created for every new `Buffer`, although data may remain constant when possible, i.e. movement ops. This means that
+the data pointer will persist through one of these operations, but the ShapeTracker will have its attributes copied.
