@@ -39,6 +39,9 @@ ShapeTracker *shapetracker_destroy(ShapeTracker *st) {
   return NULL;
 }
 
+// to convert a logical index to a physical index, use a two step process
+// 1. convert logical index to coordinate system w.r.t view
+// 2. perform usual indexing operation to retrieve physical index
 int view_index(ShapeTracker *st, int numel) {
   if (!st || numel < 0 || numel >= st->numel) {
     return -1;

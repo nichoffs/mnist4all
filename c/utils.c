@@ -3,12 +3,13 @@
 static void data_print(Buffer *buf, int dim, int offset) {
   int ndim = buf->st->ndim;
   int *shape = buf->st->shape;
+  int *stride = buf->st->stride;
   float *data = buf->data;
 
   if (dim == ndim - 1) {
     printf("[");
     for (int i = 0; i < shape[dim]; i++) {
-      printf("%f", data[offset + i]);
+      printf("%f", data[offset + i * stride[dim]]);
       if (i < shape[dim] - 1) {
         printf(", ");
       }
@@ -16,9 +17,8 @@ static void data_print(Buffer *buf, int dim, int offset) {
     printf("]");
   } else {
     printf("[");
-    int stride = buf->st->stride[dim];
     for (int i = 0; i < shape[dim]; i++) {
-      data_print(buf, dim + 1, offset + i * stride);
+      data_print(buf, dim + 1, offset + i * stride[dim]);
       if (i < shape[dim] - 1) {
         printf(",\n");
         for (int j = 0; j <= dim; j++) {

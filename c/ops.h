@@ -25,13 +25,18 @@ Buffer *sub(Buffer *buf1, Buffer *buf2);
 Buffer *mul(Buffer *buf1, Buffer *buf2);
 Buffer *divide(Buffer *buf1, Buffer *buf2);
 
+Buffer *matrix_vector_dot(Buffer *matrix, Buffer *vector);
+
 // Reduce Ops
 
 Buffer *sum(Buffer *buf);
 Buffer *sumAxis(Buffer *buf, int axis);
 
+Buffer *maxAxis(Buffer *buf, int axis);
+
 // Movement Ops
 
+Buffer *T(Buffer *buf);
 Buffer* slice(Buffer *buf, int *start, int *end);
 float indexBuffer(Buffer *buf, int *indices);
 Buffer* reshape(Buffer* buf, int *shape);
