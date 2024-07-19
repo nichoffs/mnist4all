@@ -30,6 +30,7 @@ Buffer *buffer_create(float *data, int size, ShapeTracker *st, bool copy) {
     buf->data = data;
   }
 
+  buf->size = size;
   buf->copy = copy;
 
   return buf;

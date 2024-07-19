@@ -10,10 +10,16 @@ Buffer *unary_op(Buffer *buf, UnaryOpFunc uop) {
     fprintf(stderr, "Input to unaryop is none\n");
     return NULL;
   }
-  Buffer *ret = buffer_create(buf->data, buf->size, buf->st, true);
+
+  float *data = (float *)malloc(sizeof(float) * buf->size);
   for (int i = 0; i < buf->st->numel; i++) {
-    ret->data[i] = uop(buf->data[i]);
+    int ix = view_index(buf->st, i);
+    data[i] = uop(buf->data[ix]);
   }
+
+  Buffer *ret =
+      buffer_data_create(data, buf->size, buf->st->shape, buf->st->ndim, false);
+
   return ret;
 }
 
@@ -29,11 +35,16 @@ Buffer *binary_op(Buffer *buf1, Buffer *buf2, BinaryOpFunc op_func) {
     return NULL;
   }
 
-  Buffer *ret = buffer_create(buf1->data, buf1->size, buf1->st, true);
+  float *data = (float *)malloc(sizeof(float) * buf1->size);
 
-  for (int i = 0; i < ret->size; i++) {
-    ret->data[i] = op_func(buf1->data[i], buf2->data[i]);
+  for (int i = 0; i < buf1->st->numel; i++) {
+    int ix1 = view_index(buf1->st, i);
+    int ix2 = view_index(buf2->st, i);
+    data[i] = op_func(buf1->data[ix1], buf2->data[ix2]);
   }
+
+  Buffer *ret = buffer_data_create(data, buf1->size, buf1->st->shape,
+                                   buf1->st->ndim, true);
 
   return ret;
 }
@@ -54,6 +65,74 @@ Buffer *mul(Buffer *buf1, Buffer *buf2) {
 }
 Buffer *divide(Buffer *buf1, Buffer *buf2) {
   return binary_op(buf1, buf2, div_func);
+}
+
+#include "ops.h"
+#include <stdio.h>
+#include <stdlib.h>
+
+Buffer *sumAxis(Buffer *buf, int axis) {
+  if (!buf || axis < 0 || axis >= buf->st->ndim) {
+    fprintf(stderr, "Invalid input or axis for sumAxis\n");
+    return NULL;
+  }
+
+  // Calculate the shape of the result
+  int *new_shape = (int *)malloc(sizeof(int) * (buf->st->ndim - 1));
+  int new_size = 1;
+  int j = 0;
+  for (int i = 0; i < buf->st->ndim; i++) {
+    if (i != axis) {
+      new_shape[j] = buf->st->shape[i];
+      new_size *= new_shape[j];
+      j++;
+    }
+  }
+
+  // Allocate memory for the result
+  float *result_data = (float *)calloc(new_size, sizeof(float));
+  if (!result_data) {
+    fprintf(stderr, "Memory allocation failed in sumAxis\n");
+    free(new_shape);
+    return NULL;
+  }
+
+  // Create start and end arrays for slicing
+  int *start = (int *)calloc(buf->st->ndim, sizeof(int));
+  int *end = (int *)malloc(buf->st->ndim * sizeof(int));
+  for (int i = 0; i < buf->st->ndim; i++) {
+    end[i] = buf->st->shape[i];
+  }
+
+  for (int i = 0; i < buf->st->shape[axis]; i++) {
+    start[axis] = i;
+    end[axis] = i + 1;
+
+    // Slice the buffer
+    Buffer *slice_buf = slice(buf, start, end);
+    if (!slice_buf) {
+      fprintf(stderr, "Slicing failed in sumAxis\n");
+      free(new_shape);
+      free(result_data);
+      free(start);
+      free(end);
+      return NULL;
+    }
+
+    for (int j = 0; j < new_size; j++) {
+      result_data[j] += slice_buf->data[view_index(slice_buf->st, j)];
+    }
+
+    buffer_destroy(slice_buf);
+  }
+
+  Buffer *result = buffer_data_create(result_data, new_size, new_shape,
+                                      buf->st->ndim - 1, false);
+
+  free(new_shape);
+  free(start);
+  free(end);
+  return result;
 }
 
 // movement op
