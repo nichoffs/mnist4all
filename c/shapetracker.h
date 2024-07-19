@@ -1,20 +1,40 @@
 #ifndef SHAPETRACKER_H
 #define SHAPETRACKER_H
 
+/**
+ * @struct ShapeTracker
+ * @brief Tracks the shape and stride information of a tensor.
+ */
 typedef struct {
-    int *shape;
-    int *stride;
-    int offset;
-    int ndim;
-    int numel;
+    int* shape;   /**< Array of dimension sizes */
+    int* stride;  /**< Array of strides for each dimension */
+    int offset;   /**< Offset from the start of the data */
+    int ndim;     /**< Number of dimensions */
+    int numel;    /**< Total number of elements */
 } ShapeTracker;
 
-ShapeTracker *shapetracker_create(int *shape, int *stride, int offset, int ndim);
-ShapeTracker *shapetracker_copy(int *shape, int *stride, int offset, int ndim);
-ShapeTracker *shapetracker_destroy(ShapeTracker *st);
+/**
+ * @brief Creates a new ShapeTracker.
+ * @param shape Array of dimension sizes
+ * @param stride Array of strides for each dimension
+ * @param offset Offset from the start of the data
+ * @param ndim Number of dimensions
+ * @return Pointer to the new ShapeTracker, or NULL if allocation fails
+ */
+ShapeTracker* shapetracker_create(const int* shape, const int* stride, int offset, int ndim);
 
-int view_index(ShapeTracker *st, int numel);
+/**
+ * @brief Destroys a ShapeTracker and frees its memory.
+ * @param st Pointer to the ShapeTracker to destroy
+ */
+void shapetracker_destroy(ShapeTracker* st);
 
-int _numel(int *shape, int ndim);
+/**
+ * @brief Calculates the physical index from a logical index.
+ * @param st Pointer to the ShapeTracker
+ * @param numel Logical index
+ * @return Physical index, or -1 if the input is invalid
+ */
+int view_index(ShapeTracker* st, int numel);
 
-#endif
+#endif // SHAPETRACKER_H
