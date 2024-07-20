@@ -1,6 +1,6 @@
 from __future__ import annotations
 import numpy as np
-from typing import Callable, List, Union
+from typing import Callable, List
 
 
 class Function:

@@ -54,4 +54,8 @@ Buffer* buffer_data_create(float* data, int size, int* shape, int ndim, bool cop
  */
 void buffer_destroy(Buffer* buf);
 
+Buffer* zeros(int* shape, int ndim);
+Buffer* randint(int *shape, int ndim, int low, int high);
+Buffer* uniform(int* shape, int ndim, float low, float high);
+
 #endif // BUFFER_H

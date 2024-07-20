@@ -1,6 +1,5 @@
 #include "../buffer.h"
 #include "../ops.h"
-#include "../shapetracker.h"
 #include <assert.h>
 #include <float.h>
 #include <math.h>

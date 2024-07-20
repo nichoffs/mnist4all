@@ -171,6 +171,7 @@ Buffer *matrix_vector_dot(Buffer *matrix, Buffer *vector) {
 
   return result;
 }
+
 // Reduce operations
 
 Buffer *sum(Buffer *buf) {
