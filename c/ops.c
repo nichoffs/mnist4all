@@ -7,6 +7,30 @@
 
 // Helper functions
 
+static int validate_op_input(Buffer *buf) {
+  if (!buf) {
+    fprintf(stderr, "Input buffer is NULL\n");
+    return 0;
+  }
+  if (!buf->data) {
+    fprintf(stderr, "Input buffer data is NULL\n");
+    return 0;
+  }
+  if (!buf->st) {
+    fprintf(stderr, "Input buffer ShapeTracker is NULL\n");
+    return 0;
+  }
+  if (!buf->st->shape) {
+    fprintf(stderr, "Input buffer shape is NULL\n");
+    return 0;
+  }
+  if (buf->st->numel == 0 || buf->size == 0) {
+    fprintf(stderr, "Input buffer has zero elements\n");
+    return 0;
+  }
+  return 1;
+}
+
 static Buffer *allocate_result_buffer(int size, int *shape, int ndim) {
   float *data = (float *)malloc(size * sizeof(float));
   if (!data) {
@@ -38,8 +62,7 @@ static int *calculate_new_shape(Buffer *buf, int axis, int *new_size) {
 // Unary operations
 
 Buffer *unary_op(Buffer *buf, UnaryOpFunc uop) {
-  if (!buf) {
-    fprintf(stderr, "Input to unary op is NULL\n");
+  if (!validate_op_input(buf)) {
     return NULL;
   }
 
@@ -63,9 +86,21 @@ Buffer *exponent(Buffer *buf) { return unary_op(buf, expf); }
 // Binary operations
 
 Buffer *binary_op(Buffer *buf1, Buffer *buf2, BinaryOpFunc op_func) {
-  if (!buf1 || !buf2) {
-    fprintf(stderr, "One of the inputs to binary op is NULL\n");
+  if (!validate_op_input(buf1) || !validate_op_input(buf2)) {
     return NULL;
+  }
+
+  if (buf1->st->ndim != buf2->st->ndim) {
+    fprintf(stderr,
+            "Binary Op Shape Mismatch: Different number of dimensions\n");
+    return NULL;
+  }
+
+  for (int i = 0; i < buf1->st->ndim; i++) {
+    if (buf1->st->shape[i] != buf2->st->shape[i]) {
+      fprintf(stderr, "Binary Op Shape Mismatch: Dimension %d differs\n", i);
+      return NULL;
+    }
   }
 
   Buffer *ret =
@@ -81,7 +116,6 @@ Buffer *binary_op(Buffer *buf1, Buffer *buf2, BinaryOpFunc op_func) {
 
   return ret;
 }
-
 float add_func(float a, float b) { return a + b; }
 float sub_func(float a, float b) { return a - b; }
 float mul_func(float a, float b) { return a * b; }
@@ -103,8 +137,12 @@ Buffer *divide(Buffer *buf1, Buffer *buf2) {
 // Matrix operations
 
 Buffer *matrix_vector_dot(Buffer *matrix, Buffer *vector) {
-  if (!matrix || !vector || matrix->st->ndim != 2 || vector->st->ndim != 1) {
-    fprintf(stderr, "Invalid inputs for matrix_vector_dot\n");
+  if (!validate_op_input(matrix) || !validate_op_input(vector)) {
+    return NULL;
+  }
+
+  if (matrix->st->ndim != 2 || vector->st->ndim != 1) {
+    fprintf(stderr, "Invalid dimensions for matrix_vector_dot\n");
     return NULL;
   }
 
@@ -133,7 +171,6 @@ Buffer *matrix_vector_dot(Buffer *matrix, Buffer *vector) {
 
   return result;
 }
-
 // Reduce operations
 
 Buffer *sum(Buffer *buf) {
