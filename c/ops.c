@@ -79,9 +79,13 @@ Buffer *unary_op(Buffer *buf, UnaryOpFunc uop) {
   return ret;
 }
 
+float relu_func(float a) { return a > 0 ? a : 0; }
+
 Buffer *square_root(Buffer *buf) { return unary_op(buf, sqrtf); }
 Buffer *logarithm(Buffer *buf) { return unary_op(buf, logf); }
 Buffer *exponent(Buffer *buf) { return unary_op(buf, expf); }
+Buffer *relu(Buffer *buf) { return unary_op(buf, relu_func); }
+/* Buffer *logsoftmax(Buffer *buf) { return unary_op(buf, logsoftmax_func); } */
 
 // Binary operations
 
@@ -387,5 +391,117 @@ Buffer *T(Buffer *buf) {
     return NULL;
   }
 
+  return new_buf;
+}
+
+Buffer *flatten(Buffer *buf) {
+  if (!buf || buf->st->numel == 0) {
+    fprintf(stderr, "Invalid input for flatten\n");
+    return NULL;
+  }
+
+  int shape[1] = {buf->st->numel};
+  int stride[1] = {1};
+
+  ShapeTracker *st = shapetracker_create(shape, stride, 0, 1);
+
+  Buffer *ret = buffer_create(buf->data, buf->size, st, false);
+
+  return ret;
+}
+
+Buffer *unsqueeze(Buffer *buf, int axis) {
+  if (!buf || buf->st->numel == 0) {
+    fprintf(stderr, "Invalid input for flatten\n");
+    return NULL;
+  }
+
+  int ndim = buf->st->ndim + 1;
+  int shape[ndim];
+  int stride[ndim];
+  int j = 0;
+
+  for (int i = 0; i < ndim; i++) {
+    if (axis == i) {
+      shape[i] = 1;
+      stride[i] = (i > 0) ? stride[i - 1] : buf->st->stride[0];
+    } else {
+      shape[i] = buf->st->shape[j];
+      stride[i] = buf->st->stride[j];
+      j++;
+    }
+  }
+
+  ShapeTracker *st = shapetracker_create(shape, stride, 0, ndim);
+  if (!st) {
+    fprintf(stderr, "Failed to create ShapeTracker in unsqueeze\n");
+    return NULL;
+  }
+
+  Buffer *ret = buffer_create(buf->data, buf->size, st, false);
+  if (!ret) {
+    fprintf(stderr, "Failed to create Buffer in unsqueeze\n");
+    shapetracker_destroy(st);
+  }
+
+  return ret;
+}
+
+Buffer *expand(Buffer *buf, int axis, int new_size) {
+  if (!buf || buf->st->numel == 0) {
+    fprintf(stderr, "Invalid input for expand\n");
+    return NULL;
+  }
+  if (axis < 0 || axis >= buf->st->ndim) {
+    fprintf(stderr, "Invalid axis for expand\n");
+    return NULL;
+  }
+  if (buf->st->shape[axis] != 1) {
+    fprintf(stderr, "Invalid axis shape for expand -- must be one!\n");
+    return NULL;
+  }
+  if (new_size < 1) {
+    fprintf(stderr, "Invalid new size for expand -- must be positive!\n");
+    return NULL;
+  }
+
+  int *new_shape = (int *)malloc(buf->st->ndim * sizeof(int));
+  int *new_stride = (int *)malloc(buf->st->ndim * sizeof(int));
+  if (!new_shape || !new_stride) {
+    fprintf(stderr, "Memory allocation failed in expand\n");
+    free(new_shape);
+    free(new_stride);
+    return NULL;
+  }
+
+  for (int i = 0; i < buf->st->ndim; i++) {
+    new_shape[i] = buf->st->shape[i];
+    new_stride[i] = buf->st->stride[i];
+    if (i == axis) {
+      new_shape[i] = new_size;
+      new_stride[i] = 0;
+    }
+  }
+
+  ShapeTracker *st = shapetracker_create(new_shape, new_stride, buf->st->offset,
+                                         buf->st->ndim);
+  if (!st) {
+    fprintf(stderr, "Failed to create ShapeTracker in expand\n");
+    free(new_shape);
+    free(new_stride);
+    return NULL;
+  }
+
+  Buffer *new_buf = buffer_create(buf->data, buf->size, st, false);
+  if (!new_buf) {
+    fprintf(stderr, "Failed to create Buffer in expand\n");
+    shapetracker_destroy(st);
+    free(new_shape);
+    free(new_stride);
+    return NULL;
+  }
+
+  free(new_shape);
+  free(new_stride);
   return new_buf;
 }

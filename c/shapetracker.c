@@ -5,7 +5,7 @@
 
 // Helper functions
 
-static int calculate_numel(const int *shape, int ndim) {
+static int calculate_numel(int *shape, int ndim) {
   int numel = 1;
   for (int i = 0; i < ndim; i++) {
     numel *= shape[i];
@@ -13,7 +13,7 @@ static int calculate_numel(const int *shape, int ndim) {
   return numel;
 }
 
-static int *allocate_and_copy(const int *source, int size) {
+static int *allocate_and_copy(int *source, int size) {
   int *dest = (int *)malloc(size * sizeof(int));
   if (!dest) {
     fprintf(stderr, "Memory allocation failed\n");
@@ -25,8 +25,8 @@ static int *allocate_and_copy(const int *source, int size) {
 
 // ShapeTracker functions
 
-ShapeTracker *shapetracker_create(const int *shape, const int *stride,
-                                  int offset, int ndim) {
+ShapeTracker *shapetracker_create(int *shape, int *stride, int offset,
+                                  int ndim) {
   if (!shape || !stride) {
     fprintf(stderr, "Shape or stride is NULL\n");
     return NULL;

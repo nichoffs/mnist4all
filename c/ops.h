@@ -13,6 +13,8 @@ Buffer* unary_op(Buffer* buf, UnaryOpFunc op);
 Buffer* square_root(Buffer* buf);
 Buffer* logarithm(Buffer* buf);
 Buffer* exponent(Buffer* buf);
+Buffer* log_softmax(Buffer* buf);
+Buffer* relu(Buffer* buf);
 
 // Binary Operations
 Buffer* binary_op(Buffer* buf1, Buffer* buf2, BinaryOpFunc op);
@@ -33,5 +35,8 @@ Buffer* maxAxis(Buffer* buf, int axis);
 Buffer* T(Buffer* buf);
 Buffer* slice(Buffer* buf, int* start, int* end);
 float indexBuffer(Buffer* buf, int* indices);
+Buffer* flatten(Buffer* buf);
+Buffer* unsqueeze(Buffer* buf, int axis);
+Buffer* expand(Buffer* buf, int axis, int new_size);
 
 #endif // OPS_H

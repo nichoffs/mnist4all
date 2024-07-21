@@ -58,4 +58,5 @@ Buffer* zeros(int* shape, int ndim);
 Buffer* randint(int *shape, int ndim, int low, int high);
 Buffer* uniform(int* shape, int ndim, float low, float high);
 
+
 #endif // BUFFER_H

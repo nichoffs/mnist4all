@@ -21,7 +21,7 @@ typedef struct {
  * @param ndim Number of dimensions
  * @return Pointer to the new ShapeTracker, or NULL if allocation fails
  */
-ShapeTracker* shapetracker_create(const int* shape, const int* stride, int offset, int ndim);
+ShapeTracker* shapetracker_create(int* shape, int* stride, int offset, int ndim);
 
 /**
  * @brief Destroys a ShapeTracker and frees its memory.
