@@ -1,5 +1,6 @@
 #include "ops.h"
 #include "shapetracker.h"
+#include "utils.h"
 #include <float.h>
 #include <math.h>
 #include <stdio.h>
@@ -85,7 +86,61 @@ Buffer *square_root(Buffer *buf) { return unary_op(buf, sqrtf); }
 Buffer *logarithm(Buffer *buf) { return unary_op(buf, logf); }
 Buffer *exponent(Buffer *buf) { return unary_op(buf, expf); }
 Buffer *relu(Buffer *buf) { return unary_op(buf, relu_func); }
-/* Buffer *logsoftmax(Buffer *buf) { return unary_op(buf, logsoftmax_func); } */
+
+Buffer *logsumexp(Buffer *x) {
+  Buffer *c = maxAxis(x, 1);
+
+  // Unsqueeze c to allow broadcasting
+  Buffer *c_unsqueezed = unsqueeze(c, 1);
+
+  // Broadcast c to match x's shape
+  Buffer *c_broadcasted = expand(c_unsqueezed, 1, x->st->shape[1]);
+
+  // x - c_broadcasted
+  Buffer *x_minus_c = sub(x, c_broadcasted);
+
+  // exp(x - c_broadcasted)
+  Buffer *exp_x_minus_c = exponent(x_minus_c);
+
+  // sum(exp(x - c_broadcasted), axis=1)
+  Buffer *sum_exp = sumAxis(exp_x_minus_c, 1);
+
+  // log(sum_exp)
+  Buffer *log_sum_exp = logarithm(sum_exp);
+
+  // c + log(sum_exp)
+  Buffer *result = add(c, log_sum_exp);
+
+  // Clean up temporary buffers
+  buffer_destroy(c_unsqueezed);
+  buffer_destroy(c_broadcasted);
+  buffer_destroy(x_minus_c);
+  buffer_destroy(exp_x_minus_c);
+  buffer_destroy(sum_exp);
+  buffer_destroy(log_sum_exp);
+
+  return result;
+}
+
+Buffer *log_softmax(Buffer *buf) {
+  Buffer *lse = logsumexp(buf);
+
+  // Unsqueeze lse to allow broadcasting
+  Buffer *lse_unsqueezed = unsqueeze(lse, 1);
+
+  // Broadcast lse to match buf's shape
+  Buffer *lse_broadcasted = expand(lse_unsqueezed, 1, buf->st->shape[1]);
+
+  // buf - lse_broadcasted
+  Buffer *result = sub(buf, lse_broadcasted);
+
+  // Clean up temporary buffers
+  buffer_destroy(lse);
+  buffer_destroy(lse_unsqueezed);
+  buffer_destroy(lse_broadcasted);
+
+  return result;
+}
 
 // Binary operations
 
@@ -140,6 +195,37 @@ Buffer *divide(Buffer *buf1, Buffer *buf2) {
 
 // Matrix operations
 
+// (1,N) @ (N,M) = (1,M)
+Buffer *vector_matrix_dot(Buffer *vector, Buffer *matrix) {
+  if (!validate_op_input(vector) || !validate_op_input(matrix)) {
+    return NULL;
+  }
+  if (vector->st->ndim != 2 || matrix->st->ndim != 2) {
+    fprintf(stderr, "Invalid dimensions for vector_matrix_dot\n");
+    return NULL;
+  }
+  if (vector->st->shape[0] != 1 ||
+      vector->st->shape[1] != matrix->st->shape[0]) {
+    fprintf(stderr, "Vector shape must be (1,N) and match matrix rows (N,M)\n");
+    return NULL;
+  }
+  int vector_length = vector->st->shape[1];
+  int cols = matrix->st->shape[1];
+  int result_shape[] = {1, cols};
+  Buffer *result = allocate_result_buffer(cols, result_shape, 2);
+  if (!result)
+    return NULL;
+  for (int j = 0; j < cols; j++) {
+    result->data[j] = 0;
+    for (int i = 0; i < vector_length; i++) {
+      int vector_index = view_index(vector->st, i);
+      int matrix_index = view_index(matrix->st, i * cols + j);
+      result->data[j] +=
+          vector->data[vector_index] * matrix->data[matrix_index];
+    }
+  }
+  return result;
+}
 Buffer *matrix_vector_dot(Buffer *matrix, Buffer *vector) {
   if (!validate_op_input(matrix) || !validate_op_input(vector)) {
     return NULL;

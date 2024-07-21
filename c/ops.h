@@ -13,7 +13,8 @@ Buffer* unary_op(Buffer* buf, UnaryOpFunc op);
 Buffer* square_root(Buffer* buf);
 Buffer* logarithm(Buffer* buf);
 Buffer* exponent(Buffer* buf);
-Buffer* log_softmax(Buffer* buf);
+Buffer *logsumexp(Buffer *x);
+Buffer *log_softmax(Buffer *buf); 
 Buffer* relu(Buffer* buf);
 
 // Binary Operations
@@ -24,6 +25,7 @@ Buffer* mul(Buffer* buf1, Buffer* buf2);
 Buffer* divide(Buffer* buf1, Buffer* buf2);
 
 // Matrix Operations
+Buffer *vector_matrix_dot(Buffer *vector, Buffer *matrix);
 Buffer* matrix_vector_dot(Buffer* matrix, Buffer* vector);
 
 // Reduce Operations

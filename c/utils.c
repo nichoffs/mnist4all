@@ -1,4 +1,5 @@
 #include "utils.h"
+#include "tensor.h"
 #include <stdio.h>
 
 static void print_indent(int depth) {
@@ -62,4 +63,65 @@ void shapetracker_print(Buffer *buf) {
   if (!is_buffer_valid(buf))
     return;
   print_buffer_content(buf);
+}
+
+void op_print(OpType op) {
+  printf("Operation: ");
+  switch (op) {
+  case OP_MUL:
+    printf("Multiplication\n");
+    break;
+  case OP_RELU:
+    printf("ReLU\n");
+    break;
+  case OP_MVDOT:
+    printf("Matrix-Vector Dot Product\n");
+    break;
+  case OP_VMDOT:
+    printf("Vector-Matrix Dot Product\n");
+    break;
+  case OP_SUM:
+    printf("Sum\n");
+    break;
+  case OP_LOGSOFTMAX:
+    printf("Log Softmax\n");
+    break;
+  default:
+    printf("Unknown\n");
+  }
+}
+
+void shape_print(Buffer *buf) {
+  if (!buf) {
+    printf("Shape can't be printed -- buffer null\n");
+  }
+  printf("(");
+  for (int i = 0; i < buf->st->ndim; i++) {
+    printf("%d", buf->st->shape[i]);
+    if (i < buf->st->ndim - 1) {
+      printf(", ");
+    }
+  }
+  printf(")\n");
+}
+
+void context_print(Context *ctx) {
+  if (!ctx) {
+    fprintf(stderr, "Context is NULL\n");
+    return;
+  }
+
+  printf("Context:\n");
+  op_print(ctx->op);
+
+  printf("  Number of parents: %d\n", ctx->num_parents);
+  printf("  Number of saved tensors: %d\n", ctx->num_saved_tensors);
+
+  if (ctx->saved_tensors && ctx->num_saved_tensors > 0) {
+    printf("  Saved tensors:\n");
+    for (int i = 0; i < ctx->num_saved_tensors; i++) {
+      printf("    Tensor %d:\n", i);
+      shapetracker_print(ctx->saved_tensors[i]);
+    }
+  }
 }

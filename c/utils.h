@@ -2,6 +2,7 @@
 #define UTILS_H
 
 #include "buffer.h"
+#include "tensor.h"
 #include <stdio.h>
 
 /**
@@ -15,5 +16,11 @@ void buffer_print(Buffer *buf);
  * @param buf Pointer to the Buffer whose ShapeTracker to print
  */
 void shapetracker_print(Buffer *buf);
+
+void context_print(Context *ctx);
+
+void op_print(OpType op);
+
+void shape_print(Buffer *buf);
 
 #endif // UTILS_H

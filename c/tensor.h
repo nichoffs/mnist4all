@@ -8,29 +8,28 @@
 typedef enum {
     OP_MUL,
     OP_RELU,
-    OP_DOT,
+    OP_MVDOT,
+    OP_VMDOT,
     OP_SUM,
     OP_LOGSOFTMAX,
 } OpType;
 
 // Forward declarations
-typedef struct Function Function;
+typedef struct Context Context;
 typedef struct Tensor Tensor;
 
-// Tensor structure
 struct Tensor {
-    Buffer* buf;
-    Buffer* grad;
-    Function* ctx;
+  Buffer *buf;
+  Buffer *grad;
+  Context *ctx;
 };
 
-// Function structure
-struct Function {
-    OpType op;
-    Tensor** parents;
-    int num_parents;
-    Buffer** saved_tensors;
-    int num_saved_tensors;
+struct Context {
+  OpType op;
+  Tensor **parents;
+  int num_parents;
+  Buffer **saved_tensors;
+  int num_saved_tensors;
 };
 
 // Tensor operations
@@ -38,9 +37,12 @@ Tensor* tensor_create(Buffer* buf);
 void tensor_destroy(Tensor* t);
 void tensor_backward(Tensor* t, int implicit);
 
-// Function operations
-Buffer* function_forward(Function* self, Buffer** inputs, int num_inputs);
-Buffer** function_backward(Function* self, Buffer* grad_output);
+// Graph operations
+void graph_destroy(Tensor *ret);
+
+// Context operations
+Buffer* context_forward(Context* self, Tensor** inputs, int num_inputs);
+Buffer** context_backward(Context* self, Tensor* grad_output);
 
 // Operation application
 Tensor* apply_op(OpType op, Tensor** inputs, int num_inputs);

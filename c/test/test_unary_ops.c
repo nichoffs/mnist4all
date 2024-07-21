@@ -1,5 +1,6 @@
 #include "../buffer.h"
 #include "../ops.h"
+#include "../utils.h"
 #include <assert.h>
 #include <float.h>
 #include <math.h>
@@ -63,7 +64,7 @@ void test_logarithm() {
   printf("Testing logarithm operation...\n");
 
   // Test case 1: Basic logarithm
-  float data1[] = {1.0f, 2.0f, exp(1.0f), 10.0f};
+  float data1[] = {1.0f, 2.0f, expf(1.0f), 10.0f};
   float expected1[] = {0.0f, logf(2.0f), 1.0f, logf(10.0f)};
   int shape1[] = {2, 2};
   Buffer *buf1 = create_test_buffer(data1, 4, shape1, 2);
@@ -161,11 +162,51 @@ void test_unary_op_errors() {
   printf("Unary op error handling tests passed!\n");
 }
 
+void test_log_softmax() {
+  printf("Testing log_softmax operation...\n");
+
+  // Test case 1: Basic log_softmax
+  float data1[] = {1.0f, 2.0f, 3.0f, 4.0f, 1.0f, 2.0f};
+  int shape1[] = {2, 3};
+  Buffer *buf1 = create_test_buffer(data1, 6, shape1, 2);
+  Buffer *result1 = log_softmax(buf1);
+
+  // Expected results (calculated manually or with a known-good implementation)
+  float expected1[] = {-2.4076059644443806, -1.4076059644443806,
+                       -0.4076059644443806, -0.1698460195562852,
+                       -3.169846019556285,  -2.169846019556285};
+  Buffer *expected_buf1 = create_test_buffer(expected1, 6, shape1, 2);
+
+  assert(compare_buffers(result1, expected_buf1));
+
+  // Test case 2: Log softmax with large numbers
+  float data2[] = {1000.0f, 2000.0f, 3000.0f, 4000.0f, 5000.0f, 6000.0f};
+  Buffer *buf2 = create_test_buffer(data2, 6, shape1, 2);
+  Buffer *result2 = log_softmax(buf2);
+
+  // Expected results (calculated manually or with a known-good implementation)
+  float expected2[] = {-2000.0f, -1000.0f, 0.0f, -2000.0f, -1000.0f, 0.0f};
+  Buffer *expected_buf2 = create_test_buffer(expected2, 6, shape1, 2);
+
+  assert(compare_buffers(result2, expected_buf2));
+
+  // Clean up
+  buffer_destroy(buf1);
+  buffer_destroy(buf2);
+  buffer_destroy(result1);
+  buffer_destroy(result2);
+  buffer_destroy(expected_buf1);
+  buffer_destroy(expected_buf2);
+
+  printf("Log softmax operation tests passed!\n");
+}
+
 int main() {
   test_square_root();
   test_logarithm();
   test_exponent();
   test_unary_op_errors();
+  test_log_softmax();
   printf("All unary operation tests passed successfully!\n");
   return 0;
 }
