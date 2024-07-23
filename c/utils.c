@@ -74,11 +74,8 @@ void op_print(OpType op) {
   case OP_RELU:
     printf("ReLU\n");
     break;
-  case OP_MVDOT:
-    printf("Matrix-Vector Dot Product\n");
-    break;
-  case OP_VMDOT:
-    printf("Vector-Matrix Dot Product\n");
+  case OP_DOT:
+    printf("Dot Product\n");
     break;
   case OP_SUM:
     printf("Sum\n");
@@ -115,13 +112,13 @@ void context_print(Context *ctx) {
   op_print(ctx->op);
 
   printf("  Number of parents: %d\n", ctx->num_parents);
-  printf("  Number of saved tensors: %d\n", ctx->num_saved_tensors);
+  printf("  Number of saved tensors: %d\n", ctx->num_saved_buffers);
 
-  if (ctx->saved_tensors && ctx->num_saved_tensors > 0) {
+  if (ctx->saved_buffers && ctx->num_saved_buffers > 0) {
     printf("  Saved tensors:\n");
-    for (int i = 0; i < ctx->num_saved_tensors; i++) {
+    for (int i = 0; i < ctx->num_saved_buffers; i++) {
       printf("    Tensor %d:\n", i);
-      shapetracker_print(ctx->saved_tensors[i]);
+      shapetracker_print(ctx->saved_buffers[i]);
     }
   }
 }

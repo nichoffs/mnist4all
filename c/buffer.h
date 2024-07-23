@@ -31,6 +31,8 @@ typedef struct {
  */
 Buffer* buffer_create(float* data, int size, ShapeTracker* st, bool copy);
 
+Buffer* buffer_copy(Buffer* buf);
+
 /**
  * @brief Creates a new Buffer with data and shape information.
  *
@@ -57,6 +59,7 @@ void buffer_destroy(Buffer* buf);
 Buffer* zeros(int* shape, int ndim);
 Buffer* randint(int *shape, int ndim, int low, int high);
 Buffer* uniform(int* shape, int ndim, float low, float high);
+Buffer* full_like(Buffer* buf, float fill_value);
 
 
 #endif // BUFFER_H

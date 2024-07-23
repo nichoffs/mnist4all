@@ -142,6 +142,38 @@ Buffer *log_softmax(Buffer *buf) {
   return result;
 }
 
+Buffer *log_softmax_backward(Buffer *grad_output, Buffer *output) {
+  // grad_output - np.exp(self.output) * grad_output.sum(axis=1).reshape((-1,
+  // 1))
+
+  // Step 1: Calculate exp(output)
+  Buffer *exp_output = exponent(output);
+
+  // Step 2: Sum grad_output along axis 1
+  Buffer *sum_grad = sumAxis(grad_output, 1);
+
+  // Step 3: Unsqueeze sum_grad
+  Buffer *unsqueezed_sum = unsqueeze(sum_grad, 1);
+
+  // Step 4: Expand unsqueezed_sum to match grad_output's shape
+  Buffer *expanded_sum = expand(unsqueezed_sum, 1, grad_output->st->shape[1]);
+
+  // Step 5: Multiply exp_output and expanded_sum
+  Buffer *temp = mul(exp_output, expanded_sum);
+
+  // Step 6: Subtract temp from grad_output
+  Buffer *result = sub(grad_output, temp);
+
+  // Clean up temporary buffers
+  buffer_destroy(exp_output);
+  buffer_destroy(sum_grad);
+  buffer_destroy(unsqueezed_sum);
+  buffer_destroy(expanded_sum);
+  buffer_destroy(temp);
+
+  return result;
+}
+
 // Binary operations
 
 Buffer *binary_op(Buffer *buf1, Buffer *buf2, BinaryOpFunc op_func) {
@@ -195,71 +227,123 @@ Buffer *divide(Buffer *buf1, Buffer *buf2) {
 
 // Matrix operations
 
-// (1,N) @ (N,M) = (1,M)
-Buffer *vector_matrix_dot(Buffer *vector, Buffer *matrix) {
-  if (!validate_op_input(vector) || !validate_op_input(matrix)) {
+Buffer *dot(Buffer *batch_vectors, Buffer *matrix) {
+  if (!validate_op_input(batch_vectors) || !validate_op_input(matrix)) {
     return NULL;
   }
-  if (vector->st->ndim != 2 || matrix->st->ndim != 2) {
-    fprintf(stderr, "Invalid dimensions for vector_matrix_dot\n");
+
+  // Check dimensions
+  if (batch_vectors->st->ndim != 2 || matrix->st->ndim != 2) {
+    fprintf(stderr, "Invalid dimensions for batch_dot\n");
     return NULL;
   }
-  if (vector->st->shape[0] != 1 ||
-      vector->st->shape[1] != matrix->st->shape[0]) {
-    fprintf(stderr, "Vector shape must be (1,N) and match matrix rows (N,M)\n");
+
+  int F = batch_vectors->st->shape[0]; // Batch size
+  int N = batch_vectors->st->shape[1]; // Input feature dimension
+  int M = matrix->st->shape[1];        // Output feature dimension
+
+  // Check if dimensions are compatible
+  if (N != matrix->st->shape[0]) {
+    fprintf(stderr, "Incompatible dimensions for batch_dot\n");
     return NULL;
   }
-  int vector_length = vector->st->shape[1];
-  int cols = matrix->st->shape[1];
-  int result_shape[] = {1, cols};
-  Buffer *result = allocate_result_buffer(cols, result_shape, 2);
+
+  // Allocate result buffer
+  int result_shape[] = {F, M};
+  Buffer *result = allocate_result_buffer(F * M, result_shape, 2);
   if (!result)
     return NULL;
-  for (int j = 0; j < cols; j++) {
-    result->data[j] = 0;
-    for (int i = 0; i < vector_length; i++) {
-      int vector_index = view_index(vector->st, i);
-      int matrix_index = view_index(matrix->st, i * cols + j);
-      result->data[j] +=
-          vector->data[vector_index] * matrix->data[matrix_index];
+
+  // Perform batch dot product
+  for (int f = 0; f < F; f++) {
+    for (int m = 0; m < M; m++) {
+      float sum = 0.0f;
+      for (int n = 0; n < N; n++) {
+        int vector_index = view_index(batch_vectors->st, f * N + n);
+        int matrix_index = view_index(matrix->st, n * M + m);
+        sum += batch_vectors->data[vector_index] * matrix->data[matrix_index];
+      }
+      int result_index = view_index(result->st, f * M + m);
+      result->data[result_index] = sum;
     }
   }
+
   return result;
 }
-Buffer *matrix_vector_dot(Buffer *matrix, Buffer *vector) {
-  if (!validate_op_input(matrix) || !validate_op_input(vector)) {
+
+Buffer *dot_backward(Buffer *grad_output, Buffer *input1, Buffer *input2,
+                     int input_index) {
+  if (!validate_op_input(grad_output) || !validate_op_input(input1) ||
+      !validate_op_input(input2)) {
     return NULL;
   }
 
-  if (matrix->st->ndim != 2 || vector->st->ndim != 1) {
-    fprintf(stderr, "Invalid dimensions for matrix_vector_dot\n");
+  // Check dimensions
+  if (grad_output->st->ndim != 2 || input1->st->ndim != 2 ||
+      input2->st->ndim != 2) {
+    fprintf(stderr, "Invalid dimensions for batch_dot_backward\n");
     return NULL;
   }
 
-  if (matrix->st->shape[1] != vector->st->shape[0]) {
-    fprintf(stderr, "Matrix columns must match vector length\n");
+  int F = input1->st->shape[0]; // Batch size
+  int N = input1->st->shape[1]; // Input feature dimension
+  int M = input2->st->shape[1]; // Output feature dimension
+
+  // Check if dimensions are compatible
+  if (F != grad_output->st->shape[0] || M != grad_output->st->shape[1] ||
+      N != input2->st->shape[0]) {
+    fprintf(stderr, "Incompatible dimensions for batch_dot_backward\n");
     return NULL;
   }
 
-  int rows = matrix->st->shape[0];
-  int cols = matrix->st->shape[1];
-  int result_shape[1] = {rows};
+  Buffer *grad_input;
 
-  Buffer *result = allocate_result_buffer(rows, result_shape, 1);
-  if (!result)
-    return NULL;
+  if (input_index == 0) {
+    // Computing gradient w.r.t. first input (batch_vectors)
+    grad_input = allocate_result_buffer(F * N, input1->st->shape, 2);
+    if (!grad_input)
+      return NULL;
 
-  for (int i = 0; i < rows; i++) {
-    result->data[i] = 0;
-    for (int j = 0; j < cols; j++) {
-      int matrix_index = view_index(matrix->st, i * cols + j);
-      int vector_index = view_index(vector->st, j);
-      result->data[i] +=
-          matrix->data[matrix_index] * vector->data[vector_index];
+    for (int f = 0; f < F; f++) {
+      for (int n = 0; n < N; n++) {
+        float sum = 0.0f;
+        for (int m = 0; m < M; m++) {
+          int grad_index = view_index(grad_output->st, f * M + m);
+          int weight_index = view_index(input2->st, n * M + m);
+          sum += grad_output->data[grad_index] * input2->data[weight_index];
+        }
+        int result_index = view_index(grad_input->st, f * N + n);
+        grad_input->data[result_index] = sum;
+      }
     }
+  } else if (input_index == 1) {
+    // Computing gradient w.r.t. second input (weight matrix)
+    grad_input = allocate_result_buffer(N * M, input2->st->shape, 2);
+    if (!grad_input)
+      return NULL;
+
+    // Initialize grad_input to zero
+    for (int i = 0; i < N * M; i++) {
+      grad_input->data[i] = 0.0f;
+    }
+
+    for (int f = 0; f < F; f++) {
+      for (int n = 0; n < N; n++) {
+        for (int m = 0; m < M; m++) {
+          int grad_index = view_index(grad_output->st, f * M + m);
+          int input_index = view_index(input1->st, f * N + n);
+          int result_index = view_index(grad_input->st, n * M + m);
+          grad_input->data[result_index] +=
+              grad_output->data[grad_index] * input1->data[input_index];
+        }
+      }
+    }
+  } else {
+    fprintf(stderr, "Invalid input_index for batch_dot_backward\n");
+    return NULL;
   }
 
-  return result;
+  return grad_input;
 }
 
 // Reduce operations
@@ -553,10 +637,12 @@ Buffer *expand(Buffer *buf, int axis, int new_size) {
 
   int *new_shape = (int *)malloc(buf->st->ndim * sizeof(int));
   int *new_stride = (int *)malloc(buf->st->ndim * sizeof(int));
-  if (!new_shape || !new_stride) {
-    fprintf(stderr, "Memory allocation failed in expand\n");
-    free(new_shape);
+  if (!new_shape) {
     free(new_stride);
+    return NULL;
+  }
+  if (!new_stride) {
+    free(new_shape);
     return NULL;
   }
 

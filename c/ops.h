@@ -15,6 +15,7 @@ Buffer* logarithm(Buffer* buf);
 Buffer* exponent(Buffer* buf);
 Buffer *logsumexp(Buffer *x);
 Buffer *log_softmax(Buffer *buf); 
+Buffer *log_softmax_backward(Buffer *output, Buffer *grad_output);
 Buffer* relu(Buffer* buf);
 
 // Binary Operations
@@ -25,8 +26,10 @@ Buffer* mul(Buffer* buf1, Buffer* buf2);
 Buffer* divide(Buffer* buf1, Buffer* buf2);
 
 // Matrix Operations
-Buffer *vector_matrix_dot(Buffer *vector, Buffer *matrix);
-Buffer* matrix_vector_dot(Buffer* matrix, Buffer* vector);
+
+Buffer *dot(Buffer *batch_vectors, Buffer *matrix);
+Buffer *dot_backward(Buffer *grad_output, Buffer *input1, Buffer *input2,
+                     int input_index);
 
 // Reduce Operations
 Buffer* sum(Buffer* buf);

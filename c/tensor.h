@@ -8,8 +8,7 @@
 typedef enum {
     OP_MUL,
     OP_RELU,
-    OP_MVDOT,
-    OP_VMDOT,
+    OP_DOT,
     OP_SUM,
     OP_LOGSOFTMAX,
 } OpType;
@@ -28,8 +27,8 @@ struct Context {
   OpType op;
   Tensor **parents;
   int num_parents;
-  Buffer **saved_tensors;
-  int num_saved_tensors;
+  Buffer **saved_buffers;
+  int num_saved_buffers;
 };
 
 // Tensor operations
@@ -42,7 +41,7 @@ void graph_destroy(Tensor *ret);
 
 // Context operations
 Buffer* context_forward(Context* self, Tensor** inputs, int num_inputs);
-Buffer** context_backward(Context* self, Tensor* grad_output);
+Buffer** context_backward(Context* self, Buffer* grad_output);
 
 // Operation application
 Tensor* apply_op(OpType op, Tensor** inputs, int num_inputs);

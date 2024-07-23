@@ -65,6 +65,19 @@ Buffer *buffer_create(float *data, int size, ShapeTracker *st, bool copy) {
   return buf;
 }
 
+Buffer *buffer_copy(Buffer *buf) {
+  if (!buf) {
+    printf("CANNOT COPY NULL BUFFER\n");
+    return NULL;
+  }
+
+  ShapeTracker *st = shapetracker_create(buf->st->shape, buf->st->stride,
+                                         buf->st->offset, buf->st->ndim);
+  Buffer *copy = buffer_create(buf->data, buf->size, st, true);
+
+  return copy;
+}
+
 Buffer *buffer_data_create(float *data, int size, int *shape, int ndim,
                            bool copy) {
   if (!shape) {
@@ -206,4 +219,23 @@ Buffer *uniform(int *shape, int ndim, float low, float high) {
     free(data);
   }
   return buf;
+}
+
+Buffer *full_like(Buffer *buf, float fill_value) {
+  if (!buf) {
+    fprintf(stderr, "Buffer is NULL\n");
+    return NULL;
+  }
+
+  Buffer *ret = buffer_copy(buf);
+  if (!ret) {
+    printf("Buffer copy failed");
+    return NULL;
+  }
+  for (int i = 0; i < ret->st->numel; i++) {
+    int ix = view_index(ret->st, i);
+    ret->data[ix] = fill_value;
+  }
+
+  return ret;
 }
