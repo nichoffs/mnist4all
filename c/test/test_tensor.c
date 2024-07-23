@@ -1,11 +1,9 @@
 #include "../buffer.h"
-#include "../ops.h"
 #include "../tensor.h"
 #include "../utils.h"
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 #define EPSILON 1e-6
 
@@ -39,7 +37,7 @@ void test_forward_pass() {
   Tensor *m = tensor_create(m_buf);
 
   // Perform forward pass
-  Tensor *out = apply_op(OP_VMDOT, (Tensor *[]){x, W}, 2);
+  Tensor *out = apply_op(OP_DOT, (Tensor *[]){x, W}, 2);
   Tensor *outr = apply_op(OP_RELU, (Tensor *[]){out}, 1);
   Tensor *outl = apply_op(OP_LOGSOFTMAX, (Tensor *[]){outr}, 1);
   Tensor *outm = apply_op(OP_MUL, (Tensor *[]){outl, m}, 2);
@@ -59,6 +57,10 @@ void test_forward_pass() {
   assert(fabs(outx->buf->data[0] - expected_result) < EPSILON);
 
   printf("Forward pass test passed!\n");
+  tensor_backward(outx, true);
+  shapetracker_print(x->grad);
+  shapetracker_print(W->grad);
+  graph_destroy(outx);
 }
 
 int main() {

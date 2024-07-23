@@ -1,6 +1,5 @@
 #include "../buffer.h"
 #include "../ops.h"
-#include "../utils.h"
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
@@ -244,20 +243,20 @@ void test_expand() {
 
   // Test case 1: 2D array, expand second dimension
   float data1[] = {1, 2, 3, 4};
-  int shape1[] = {2, 2};
+  int shape1[] = {4, 1};
   Buffer *buf1 = create_test_buffer(data1, 4, shape1, 2);
 
-  Buffer *result1 = expand(buf1, 1, 3);
+  Buffer *result1 = expand(buf1, 1, 2);
 
+  assert(result1 != NULL);
   assert(result1->st->ndim == 2);
-  assert(result1->st->shape[0] == 2);
-  assert(result1->st->shape[1] == 3);
-  assert(result1->st->stride[1] ==
-         0); // Stride should be 0 for expanded dimension
+  assert(result1->st->shape[0] == 4);
+  assert(result1->st->shape[1] == 2);
+  assert(result1->st->stride[1] == 0);
 
-  float expected1[] = {1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4};
-  int expected_shape1[] = {2, 3};
-  Buffer *expected_buf1 = create_test_buffer(expected1, 12, expected_shape1, 2);
+  float expected1[] = {1, 1, 2, 2, 3, 3, 4, 4};
+  int expected_shape1[] = {4, 2};
+  Buffer *expected_buf1 = create_test_buffer(expected1, 8, expected_shape1, 2);
 
   assert(compare_buffers(result1, expected_buf1));
 
@@ -268,6 +267,7 @@ void test_expand() {
 
   Buffer *result2 = expand(buf2, 1, 4);
 
+  assert(result2 != NULL);
   assert(result2->st->ndim == 3);
   assert(result2->st->shape[0] == 2);
   assert(result2->st->shape[1] == 4);

@@ -1,172 +1,142 @@
+// In test_dot.c or a similar test file
+
 #include "../buffer.h"
 #include "../ops.h"
-#include "../utils.h"
 #include <assert.h>
-#include <float.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #define EPSILON 1e-6
 
-// Helper function to compare buffers
-int compare_buffers(Buffer *buf1, Buffer *buf2) {
-  if (buf1->st->numel != buf2->st->numel) {
-    printf("Number of elements mismatch: %d vs %d\n", buf1->st->numel,
-           buf2->st->numel);
-    return 0;
-  }
-  for (int i = 0; i < buf1->st->numel; i++) {
-    int ix1 = view_index(buf1->st, i);
-    int ix2 = view_index(buf2->st, i);
-    if (fabs(buf1->data[ix1] - buf2->data[ix2]) > EPSILON) {
-      printf("Value mismatch at index %d: %f vs %f\n", i, buf1->data[ix1],
-             buf2->data[ix2]);
-      return 0;
+void test_dot() {
+  printf("Testing dot function...\n");
+
+  // Test case 1: Valid input (provided example)
+  {
+    float data1[6] = {1, 2, 3, 4, 5, 6};
+    int shape1[2] = {2, 3};
+    int size1 = 6;
+    int ndim1 = 2;
+    float weight_data1[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+    int weight_shape1[2] = {3, 3};
+    int weight_size1 = 9;
+    int weight_ndim1 = 2;
+    Buffer *buf1 = buffer_data_create(data1, size1, shape1, ndim1, true);
+    Buffer *weight1 = buffer_data_create(weight_data1, weight_size1,
+                                         weight_shape1, weight_ndim1, true);
+    Buffer *out1 = dot(buf1, weight1);
+
+    assert(out1 != NULL);
+    assert(out1->st->ndim == 2);
+    assert(out1->st->shape[0] == 2);
+    assert(out1->st->shape[1] == 3);
+
+    float expected1[6] = {30, 36, 42, 66, 81, 96};
+    for (int i = 0; i < 6; i++) {
+      assert(fabs(out1->data[i] - expected1[i]) < EPSILON);
     }
+
+    buffer_destroy(buf1);
+    buffer_destroy(weight1);
+    buffer_destroy(out1);
   }
-  return 1;
-}
 
-// Helper function to create a test buffer
-Buffer *create_test_buffer(float *data, int size, int *shape, int ndim) {
-  return buffer_data_create(data, size, shape, ndim, true);
-}
+  // Test case 2: Invalid input - mismatched dimensions
+  {
+    float data2[6] = {1, 2, 3, 4, 5, 6};
+    int shape2[2] = {2, 3};
+    float weight_data2[6] = {1, 2, 3, 4, 5, 6};
+    int weight_shape2[2] = {2, 3}; // Should be {3, something}
+    Buffer *buf2 = buffer_data_create(data2, 6, shape2, 2, true);
+    Buffer *weight2 =
+        buffer_data_create(weight_data2, 6, weight_shape2, 2, true);
+    Buffer *out2 = dot(buf2, weight2);
 
-void test_matrix_vector_dot() {
-  printf("Testing matrix_vector_dot operation...\n");
+    assert(out2 == NULL);
 
-  // Test case 1: Basic matrix-vector multiplication
-  float matrix_data1[] = {1, 2, 3, 4, 5, 6};
-  int matrix_shape1[] = {2, 3};
-  Buffer *matrix1 = create_test_buffer(matrix_data1, 6, matrix_shape1, 2);
+    buffer_destroy(buf2);
+    buffer_destroy(weight2);
+  }
 
-  float vector_data1[] = {1, 2, 3};
-  int vector_shape1[] = {3};
-  Buffer *vector1 = create_test_buffer(vector_data1, 3, vector_shape1, 1);
+  // Test case 3: Invalid input - incorrect number of dimensions
+  {
+    float data3[3] = {1, 2, 3};
+    int shape3[1] = {3};
+    float weight_data3[9] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+    int weight_shape3[2] = {3, 3};
+    Buffer *buf3 = buffer_data_create(data3, 3, shape3, 1, true);
+    Buffer *weight3 =
+        buffer_data_create(weight_data3, 9, weight_shape3, 2, true);
+    Buffer *out3 = dot(buf3, weight3);
 
-  Buffer *result1 = matrix_vector_dot(matrix1, vector1);
+    assert(out3 == NULL);
 
-  float expected_data1[] = {14, 32};
-  int expected_shape1[] = {2};
-  Buffer *expected1 = create_test_buffer(expected_data1, 2, expected_shape1, 1);
+    buffer_destroy(buf3);
+    buffer_destroy(weight3);
+  }
 
-  assert(compare_buffers(result1, expected1));
+  // Test case 4: Edge case - 1x1 matrices
+  {
+    float data4[1] = {2};
+    int shape4[2] = {1, 1};
+    float weight_data4[1] = {3};
+    int weight_shape4[2] = {1, 1};
+    Buffer *buf4 = buffer_data_create(data4, 1, shape4, 2, true);
+    Buffer *weight4 =
+        buffer_data_create(weight_data4, 1, weight_shape4, 2, true);
+    Buffer *out4 = dot(buf4, weight4);
 
-  // Test case 2: Matrix-vector multiplication with larger dimensions
-  float matrix_data2[20];
-  for (int i = 0; i < 20; i++)
-    matrix_data2[i] = i + 1;
-  int matrix_shape2[] = {4, 5};
-  Buffer *matrix2 = create_test_buffer(matrix_data2, 20, matrix_shape2, 2);
+    assert(out4 != NULL);
+    assert(out4->st->ndim == 2);
+    assert(out4->st->shape[0] == 1);
+    assert(out4->st->shape[1] == 1);
+    assert(fabs(out4->data[0] - 6) < EPSILON);
 
-  float vector_data2[] = {1, 2, 3, 4, 5};
-  int vector_shape2[] = {5};
-  Buffer *vector2 = create_test_buffer(vector_data2, 5, vector_shape2, 1);
+    buffer_destroy(buf4);
+    buffer_destroy(weight4);
+    buffer_destroy(out4);
+  }
 
-  Buffer *result2 = matrix_vector_dot(matrix2, vector2);
+  // Test case 5: Large batch size
+  {
+    int batch_size = 1000;
+    int input_dim = 10;
+    int output_dim = 5;
+    float *data5 = malloc(batch_size * input_dim * sizeof(float));
+    float *weight_data5 = malloc(input_dim * output_dim * sizeof(float));
+    for (int i = 0; i < batch_size * input_dim; i++)
+      data5[i] = 1.0f;
+    for (int i = 0; i < input_dim * output_dim; i++)
+      weight_data5[i] = 1.0f;
 
-  float expected_data2[] = {55, 130, 205, 280};
-  int expected_shape2[] = {4};
-  Buffer *expected2 = create_test_buffer(expected_data2, 4, expected_shape2, 1);
+    int shape5[2] = {batch_size, input_dim};
+    int weight_shape5[2] = {input_dim, output_dim};
+    Buffer *buf5 =
+        buffer_data_create(data5, batch_size * input_dim, shape5, 2, true);
+    Buffer *weight5 = buffer_data_create(weight_data5, input_dim * output_dim,
+                                         weight_shape5, 2, true);
+    Buffer *out5 = dot(buf5, weight5);
 
-  assert(compare_buffers(result2, expected2));
+    assert(out5 != NULL);
+    assert(out5->st->ndim == 2);
+    assert(out5->st->shape[0] == batch_size);
+    assert(out5->st->shape[1] == output_dim);
+    for (int i = 0; i < batch_size * output_dim; i++) {
+      assert(fabs(out5->data[i] - input_dim) < EPSILON);
+    }
 
-  // Test case 3: Error handling - incompatible dimensions
-  float vector_data3[] = {1, 2};
-  int vector_shape3[] = {2};
-  Buffer *vector3 = create_test_buffer(vector_data3, 2, vector_shape3, 1);
+    buffer_destroy(buf5);
+    buffer_destroy(weight5);
+    buffer_destroy(out5);
+    free(data5);
+    free(weight_data5);
+  }
 
-  Buffer *result3 = matrix_vector_dot(matrix2, vector3);
-  assert(result3 == NULL);
-
-  // Clean up
-  buffer_destroy(matrix1);
-  buffer_destroy(vector1);
-  buffer_destroy(result1);
-  buffer_destroy(expected1);
-  buffer_destroy(matrix2);
-  buffer_destroy(vector2);
-  buffer_destroy(result2);
-  buffer_destroy(expected2);
-  buffer_destroy(vector3);
-
-  printf("matrix_vector_dot tests passed!\n");
-}
-
-void test_vector_matrix_dot() {
-  printf("Testing vector_matrix_dot operation...\n");
-
-  // Test case 1: Basic vector-matrix multiplication
-  float vector_data1[] = {1, 2};
-  int vector_shape1[] = {1, 2};
-  Buffer *vector1 = create_test_buffer(vector_data1, 2, vector_shape1, 2);
-
-  float matrix_data1[] = {1, 2, 3, 4, 5, 6};
-  int matrix_shape1[] = {2, 3};
-  Buffer *matrix1 = create_test_buffer(matrix_data1, 6, matrix_shape1, 2);
-
-  Buffer *result1 = vector_matrix_dot(vector1, matrix1);
-
-  float expected_data1[] = {9, 12, 15};
-  int expected_shape1[] = {1, 3};
-  Buffer *expected1 = create_test_buffer(expected_data1, 3, expected_shape1, 2);
-
-  assert(compare_buffers(result1, expected1));
-
-  // Test case 2: Vector-matrix multiplication with larger dimensions
-  float vector_data2[] = {1, 2, 3, 4};
-  int vector_shape2[] = {1, 4};
-  Buffer *vector2 = create_test_buffer(vector_data2, 4, vector_shape2, 2);
-
-  float matrix_data2[20];
-  for (int i = 0; i < 20; i++)
-    matrix_data2[i] = i + 1;
-  int matrix_shape2[] = {4, 5};
-  Buffer *matrix2 = create_test_buffer(matrix_data2, 20, matrix_shape2, 2);
-
-  Buffer *result2 = vector_matrix_dot(vector2, matrix2);
-
-  float expected_data2[] = {110, 120, 130, 140, 150};
-  int expected_shape2[] = {1, 5};
-  Buffer *expected2 = create_test_buffer(expected_data2, 5, expected_shape2, 2);
-
-  assert(compare_buffers(result2, expected2));
-
-  // Test case 3: Error handling - incompatible dimensions
-  float vector_data3[] = {1, 2, 3};
-  int vector_shape3[] = {1, 3};
-  Buffer *vector3 = create_test_buffer(vector_data3, 3, vector_shape3, 2);
-
-  Buffer *result3 = vector_matrix_dot(vector3, matrix2);
-  assert(result3 == NULL);
-
-  // Test case 4: Error handling - incorrect vector shape
-  float vector_data4[] = {1, 2};
-  int vector_shape4[] = {2, 1};
-  Buffer *vector4 = create_test_buffer(vector_data4, 2, vector_shape4, 2);
-
-  Buffer *result4 = vector_matrix_dot(vector4, matrix1);
-  assert(result4 == NULL);
-
-  // Clean up
-  buffer_destroy(vector1);
-  buffer_destroy(matrix1);
-  buffer_destroy(result1);
-  buffer_destroy(expected1);
-  buffer_destroy(vector2);
-  buffer_destroy(matrix2);
-  buffer_destroy(result2);
-  buffer_destroy(expected2);
-  buffer_destroy(vector3);
-  buffer_destroy(vector4);
-
-  printf("vector_matrix_dot tests passed!\n");
+  printf("All dot tests passed!\n");
 }
 
 int main() {
-  test_matrix_vector_dot();
-  test_vector_matrix_dot();
-  printf("All matrix and vector dot product tests passed successfully!\n");
+  test_dot();
   return 0;
 }
