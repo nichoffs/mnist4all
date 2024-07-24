@@ -1,4 +1,5 @@
 #include "ops.h"
+#include "buffer.h"
 #include "shapetracker.h"
 #include "utils.h"
 #include <float.h>
@@ -500,6 +501,79 @@ Buffer *maxAxis(Buffer *buf, int axis) {
   return result;
 }
 
+Buffer *nll(Buffer *pred, Buffer *target) {
+  if (!validate_op_input(pred) || !validate_op_input(target)) {
+    return NULL;
+  }
+
+  if (pred->st->ndim != 2 || target->st->ndim != 2 ||
+      pred->st->shape[0] != target->st->shape[0] ||
+      pred->st->shape[1] != target->st->shape[1]) {
+    fprintf(stderr, "NLL Error: Prediction and target shapes do not match\n");
+    return NULL;
+  }
+
+  // Element-wise multiplication
+  Buffer *mul_result = mul(pred, target);
+  if (!mul_result) {
+    fprintf(stderr, "NLL Error: Failed to multiply pred and target\n");
+    return NULL;
+  }
+
+  float div = 1.0 / mul_result->size;
+
+  // Sum along the class dimension (axis 1)
+  Buffer *result = sum(mul_result);
+  buffer_destroy(mul_result);
+  if (!result) {
+    fprintf(stderr, "NLL Error: Failed to sum along axis 1\n");
+    return NULL;
+  }
+
+  result->data[0] *= div;
+
+  return result;
+}
+
+Buffer *nll_backward(Buffer *grad_output, Buffer *target) {
+  if (!validate_op_input(grad_output) || !validate_op_input(target)) {
+    return NULL;
+  }
+
+  if (target->st->ndim != 2) {
+    fprintf(stderr, "NLL Backward Error: Targets must be 2d.\n");
+    return NULL;
+  }
+
+  if (grad_output->st->numel != 1) {
+    fprintf(stderr, "NLL Backward Error: Gradient output should be a scalar\n");
+    return NULL;
+  }
+
+  int batch_size = target->st->shape[0];
+  int num_classes = target->st->shape[1];
+
+  // Allocate memory for the gradient
+  Buffer *grad =
+      allocate_result_buffer(target->size, target->st->shape, target->st->ndim);
+  if (!grad) {
+    fprintf(stderr, "NLL Backward Error: Failed to allocate gradient buffer\n");
+    return NULL;
+  }
+
+  float grad_scale = grad_output->data[0] / batch_size;
+
+  // Calculate the gradient
+  for (int i = 0; i < batch_size; i++) {
+    for (int j = 0; j < num_classes; j++) {
+      int index = i * num_classes + j;
+      grad->data[index] = grad_scale * target->data[index];
+    }
+  }
+
+  return grad;
+}
+
 // Movement operations
 
 Buffer *slice(Buffer *buf, int *start, int *end) {
@@ -576,6 +650,71 @@ Buffer *flatten(Buffer *buf) {
   ShapeTracker *st = shapetracker_create(shape, stride, 0, 1);
 
   Buffer *ret = buffer_create(buf->data, buf->size, st, false);
+
+  return ret;
+}
+
+Buffer *flattenAxes(Buffer *buf, int ax1, int ax2) {
+  if (!buf || buf->st->numel == 0) {
+    fprintf(stderr, "Invalid input for flatten\n");
+    return NULL;
+  }
+
+  // Validate that ax1 is less than ax2 and they are adjacent
+  if (ax1 >= ax2 || ax2 - ax1 != 1 || ax2 >= buf->st->ndim) {
+    fprintf(stderr, "Invalid axes for flattening\n");
+    return NULL;
+  }
+
+  // Create new shape
+  int new_ndim = buf->st->ndim - 1;
+  int *new_shape = (int *)malloc(new_ndim * sizeof(int));
+  if (!new_shape) {
+    fprintf(stderr, "Memory allocation failed in flattenAxes\n");
+    return NULL;
+  }
+
+  // Copy shapes before ax1
+  for (int i = 0; i < ax1; i++) {
+    new_shape[i] = buf->st->shape[i];
+  }
+
+  // Multiply shapes of ax1 and ax2
+  new_shape[ax1] = buf->st->shape[ax1] * buf->st->shape[ax2];
+
+  // Copy shapes after ax2
+  for (int i = ax1 + 1; i < new_ndim; i++) {
+    new_shape[i] = buf->st->shape[i + 1];
+  }
+
+  // Calculate new strides
+  int *new_stride = calculate_strides(new_shape, new_ndim);
+  if (!new_stride) {
+    fprintf(stderr, "Stride calculation failed in flattenAxes\n");
+    free(new_shape);
+    return NULL;
+  }
+
+  // Create new ShapeTracker
+  ShapeTracker *new_st =
+      shapetracker_create(new_shape, new_stride, buf->st->offset, new_ndim);
+  if (!new_st) {
+    fprintf(stderr, "Failed to create new ShapeTracker in flattenAxes\n");
+    free(new_shape);
+    free(new_stride);
+    return NULL;
+  }
+
+  // Create new Buffer
+  Buffer *ret = buffer_create(buf->data, buf->size, new_st, false);
+  if (!ret) {
+    fprintf(stderr, "Failed to create new Buffer in flattenAxes\n");
+    shapetracker_destroy(new_st);
+  }
+
+  // Clean up
+  free(new_shape);
+  free(new_stride);
 
   return ret;
 }

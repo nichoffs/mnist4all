@@ -35,12 +35,14 @@ Buffer *dot_backward(Buffer *grad_output, Buffer *input1, Buffer *input2,
 Buffer* sum(Buffer* buf);
 Buffer* sumAxis(Buffer* buf, int axis);
 Buffer* maxAxis(Buffer* buf, int axis);
+Buffer* nll(Buffer* pred, Buffer* target);
+Buffer *nll_backward(Buffer *grad_output, Buffer *target);
 
 // Movement Operations
 Buffer* T(Buffer* buf);
 Buffer* slice(Buffer* buf, int* start, int* end);
-float indexBuffer(Buffer* buf, int* indices);
 Buffer* flatten(Buffer* buf);
+Buffer *flattenAxes(Buffer *buf, int ax1, int ax2);
 Buffer* unsqueeze(Buffer* buf, int axis);
 Buffer* expand(Buffer* buf, int axis, int new_size);
 

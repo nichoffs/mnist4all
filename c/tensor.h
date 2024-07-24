@@ -11,6 +11,7 @@ typedef enum {
     OP_DOT,
     OP_SUM,
     OP_LOGSOFTMAX,
+    OP_NLL,
 } OpType;
 
 // Forward declarations

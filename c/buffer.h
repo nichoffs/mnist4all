@@ -20,6 +20,9 @@ typedef struct {
     bool copy;
 } Buffer;
 
+
+int *calculate_strides(const int *shape, int ndim);
+
 /**
  * @brief Creates a new Buffer with existing data and shape information.
  *
@@ -32,6 +35,7 @@ typedef struct {
 Buffer* buffer_create(float* data, int size, ShapeTracker* st, bool copy);
 
 Buffer* buffer_copy(Buffer* buf);
+
 
 /**
  * @brief Creates a new Buffer with data and shape information.
@@ -57,7 +61,7 @@ Buffer* buffer_data_create(float* data, int size, int* shape, int ndim, bool cop
 void buffer_destroy(Buffer* buf);
 
 Buffer* zeros(int* shape, int ndim);
-Buffer* randint(int *shape, int ndim, int low, int high);
+/* Buffer* randint(int *shape, int ndim, int low, int high); */
 Buffer* uniform(int* shape, int ndim, float low, float high);
 Buffer* full_like(Buffer* buf, float fill_value);
 

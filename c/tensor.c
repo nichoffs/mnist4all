@@ -51,6 +51,13 @@ Buffer *context_forward(Context *self, Tensor **inputs, int num_inputs) {
     self->num_saved_buffers = 1;
     return result;
   }
+  case OP_NLL: {
+    self->saved_buffers = (Buffer **)malloc(sizeof(Buffer *));
+    self->saved_buffers[0] = buffer_copy(inputs[1]->buf);
+    self->num_saved_buffers = 1;
+    Buffer *result = nll(inputs[0]->buf, inputs[1]->buf);
+    return result;
+  }
   default: {
     fprintf(stderr, "Invalid op type\n");
     return NULL;
@@ -100,6 +107,10 @@ Buffer **context_backward(Context *self, Buffer *grad_output) {
     grads[0] = log_softmax_backward(grad_output, self->saved_buffers[0]);
     break;
   }
+  case OP_NLL: {
+    grads[0] = nll_backward(grad_output, self->saved_buffers[0]);
+    break;
+  }
   default: {
     fprintf(stderr, "Invalid op type\n");
     return NULL;
@@ -134,6 +145,7 @@ Tensor *apply_op(OpType op, Tensor **inputs, int num_inputs) {
     fprintf(stderr, "Error: malloc failed for Context\n");
     return NULL;
   }
+  /* op_print(op); */
   f->op = op;
   f->parents = inputs; // Directly set parents to the input tensor pointers
   f->num_parents = num_inputs;
@@ -171,7 +183,9 @@ void graph_destroy(Tensor *tensor) {
     for (int i = 0; i < tensor->ctx->num_parents; i++) {
       graph_destroy(tensor->ctx->parents[i]);
     }
-    free(tensor->ctx);
+    if (tensor->ctx) {
+      free(tensor->ctx);
+    }
     free(tensor->buf);
     if (tensor->grad) {
       free(tensor->grad);
@@ -194,11 +208,10 @@ void tensor_backward(Tensor *t, int implicit) {
   assert(t->grad != NULL);
   Buffer **grads = context_backward(t->ctx, t->grad);
   for (int i = 0; i < t->ctx->num_parents; i++) {
-    Tensor *parent = t->ctx->parents[i];
-    assert(grads[i]->st->numel == parent->buf->st->numel &&
+    assert(grads[i]->st->numel == t->ctx->parents[i]->buf->st->numel &&
            "grad shape != tensor shape");
-    parent->grad = grads[i];
-    tensor_backward(parent, 0);
+    t->ctx->parents[i]->grad = grads[i];
+    tensor_backward(t->ctx->parents[i], 0);
   }
   free(grads);
 }

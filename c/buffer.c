@@ -23,7 +23,7 @@ static float *allocate_data(int size) {
   return data;
 }
 
-static int *calculate_strides(const int *shape, int ndim) {
+int *calculate_strides(const int *shape, int ndim) {
   int *stride = (int *)malloc(sizeof(int) * ndim);
   if (!stride) {
     fprintf(stderr, "Cannot allocate memory for stride\n");
@@ -133,49 +133,49 @@ Buffer *zeros(int *shape, int ndim) {
   return buf;
 }
 
-Buffer *randint(int *shape, int ndim, int low, int high) {
-  if (!shape) {
-    fprintf(stderr, "Shape is NULL\n");
-    return NULL;
-  }
-  if (low >= high) {
-    fprintf(stderr, "Invalid range: low must be less than high\n");
-    return NULL;
-  }
-
-  int size = 1;
-  for (int i = 0; i < ndim; i++) {
-    size *= shape[i];
-  }
-
-  if (!size) {
-    fprintf(stderr, "Size is 0\n");
-    return NULL;
-  }
-
-  float *data = (float *)malloc(size * sizeof(float));
-  if (!data) {
-    fprintf(stderr, "Failed to allocate memory for randint data\n");
-    return NULL;
-  }
-
-  static int seeded = 0;
-  if (!seeded) {
-    srand(time(NULL));
-    seeded = 1;
-  }
-
-  int range = high - low;
-  for (int i = 0; i < size; i++) {
-    data[i] = (float)(low + (rand() % range));
-  }
-
-  Buffer *buf = buffer_data_create(data, size, shape, ndim, false);
-  if (!buf) {
-    free(data);
-  }
-  return buf;
-}
+/* Buffer *randint(int *shape, int ndim, int low, int high) { */
+/*   if (!shape) { */
+/*     fprintf(stderr, "Shape is NULL\n"); */
+/*     return NULL; */
+/*   } */
+/*   if (low >= high) { */
+/*     fprintf(stderr, "Invalid range: low must be less than high\n"); */
+/*     return NULL; */
+/*   } */
+/**/
+/*   int size = 1; */
+/*   for (int i = 0; i < ndim; i++) { */
+/*     size *= shape[i]; */
+/*   } */
+/**/
+/*   if (!size) { */
+/*     fprintf(stderr, "Size is 0\n"); */
+/*     return NULL; */
+/*   } */
+/**/
+/*   float *data = (float *)malloc(size * sizeof(float)); */
+/*   if (!data) { */
+/*     fprintf(stderr, "Failed to allocate memory for randint data\n"); */
+/*     return NULL; */
+/*   } */
+/**/
+/*   static int seeded = 0; */
+/*   if (!seeded) { */
+/*     srand(time(NULL)); */
+/*     seeded = 1; */
+/*   } */
+/**/
+/*   int range = high - low; */
+/*   for (int i = 0; i < size; i++) { */
+/*     data[i] = (float)(low + (rand() % range)); */
+/*   } */
+/**/
+/*   Buffer *buf = buffer_data_create(data, size, shape, ndim, false); */
+/*   if (!buf) { */
+/*     free(data); */
+/*   } */
+/*   return buf; */
+/* } */
 
 Buffer *uniform(int *shape, int ndim, float low, float high) {
   if (!shape) {

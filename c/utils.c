@@ -83,6 +83,9 @@ void op_print(OpType op) {
   case OP_LOGSOFTMAX:
     printf("Log Softmax\n");
     break;
+  case OP_NLL:
+    printf("NLL\n");
+    break;
   default:
     printf("Unknown\n");
   }
@@ -118,7 +121,8 @@ void context_print(Context *ctx) {
     printf("  Saved tensors:\n");
     for (int i = 0; i < ctx->num_saved_buffers; i++) {
       printf("    Tensor %d:\n", i);
-      shapetracker_print(ctx->saved_buffers[i]);
+      shape_print(ctx->saved_buffers[i]);
+      /* shapetracker_print(ctx->saved_buffers[i]); */
     }
   }
 }
