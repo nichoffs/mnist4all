@@ -8,8 +8,8 @@
 #include <time.h>
 
 #define BS 128
-#define LR 0.01
-#define EPOCHS 0.01
+#define LR .01
+#define EPOCHS 1000
 #define SAMPLE_SIZE 784
 #define NUM_CLASSES 10
 #define NUM_SAMPLES 60000
@@ -177,24 +177,10 @@ static MNISTClassifier *create_mnist_classifier() {
   return model;
 }
 
-static Tensor *mnist_classifier_forward(MNISTClassifier *model, Tensor *x,
-                                        Tensor *y) {
-  printf("Preparing dot!\n");
-  Tensor *h1 = apply_op(OP_DOT, (Tensor *[]){x, model->l1}, 2);
-  printf("Done dot!\n");
-  printf("Preparing ReLU!\n");
-  Tensor *h1_relu = apply_op(OP_RELU, (Tensor *[]){h1}, 1);
-  Tensor *logits = apply_op(OP_DOT, (Tensor *[]){h1_relu, model->l2}, 2);
-  Tensor *probs = apply_op(OP_LOGSOFTMAX, (Tensor *[]){logits}, 1);
-  Tensor *loss = apply_op(OP_NLL, (Tensor *[]){probs, y}, 2);
-  return loss;
-}
-
 void sgd_step(Tensor **params, int num_params, float lr) {
   for (int i = 0; i < num_params; i++) {
     for (int j = 0; j < params[i]->buf->st->numel; j++) {
-      int ix = view_index(params[i]->buf->st, j);
-      params[i]->buf->data[ix] -= lr * params[i]->grad->data[ix];
+      params[i]->buf->data[j] -= lr * params[i]->grad->data[j];
     }
     buffer_destroy(params[i]->grad);
     params[i]->grad = NULL;
@@ -215,7 +201,7 @@ int main() {
 
   MNISTClassifier *model = create_mnist_classifier();
 
-  for (int epoch = 0; epoch < 1; epoch++) {
+  for (int epoch = 0; epoch < 1000; epoch++) {
 
     rand_int(0, NUM_SAMPLES, BS, indices);
 
@@ -226,14 +212,18 @@ int main() {
     Tensor *y = tensor_create(labels);
 
     // Forward pass
-    Tensor *loss = mnist_classifier_forward(model, x, y);
+    Tensor *h1 = apply_op(OP_DOT, (Tensor *[]){x, model->l1}, 2);
+    Tensor *h1_relu = apply_op(OP_RELU, (Tensor *[]){h1}, 1);
+    Tensor *logits = apply_op(OP_DOT, (Tensor *[]){h1_relu, model->l2}, 2);
+    Tensor *probs = apply_op(OP_LOGSOFTMAX, (Tensor *[]){logits}, 1);
+    Tensor *loss = apply_op(OP_NLL, (Tensor *[]){probs, y}, 2);
     printf("Loss: %f\n", loss->buf->data[0]);
 
     // Backward pass
-    tensor_backward(loss, 1);
+    backward(loss, 1);
 
     // Update parameters
-    /* sgd_step(params, num_params, LR); */
+    sgd_step((Tensor *[]){model->l1, model->l2}, 2, LR);
 
     // Clean up
     /* graph_destroy(loss); */

@@ -66,7 +66,6 @@ void shapetracker_print(Buffer *buf) {
 }
 
 void op_print(OpType op) {
-  fprintf(stderr, "Entering op_print function\n");
   fprintf(stderr, "Operation: ");
   switch (op) {
   case OP_MUL:
@@ -90,7 +89,6 @@ void op_print(OpType op) {
   default:
     fprintf(stderr, "Unknown (%d)\n", op);
   }
-  fprintf(stderr, "Exiting op_print function\n");
 }
 
 void shape_print(Buffer *buf) {
@@ -105,4 +103,14 @@ void shape_print(Buffer *buf) {
     }
   }
   printf(")\n");
+}
+
+void context_print(Context *ctx) {
+  printf("Context:\n");
+  op_print(ctx->op);
+  printf("Inputs:\n");
+  for (int i = 0; i < ctx->num_inputs; i++) {
+    printf("Input %d:\n", i);
+    shape_print(ctx->inputs[i]->buf);
+  }
 }

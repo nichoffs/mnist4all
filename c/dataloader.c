@@ -77,11 +77,7 @@ Buffer *load_mnist_gzip(const char *filename, int is_images) {
 
   // Convert uint8_t to float
   for (int i = 0; i < total_size; i++) {
-    if (is_images) {
-      data[i] = (float)temp_buffer[i] / 255.0f; // Normalize to [0, 1]
-    } else {
-      data[i] = (float)temp_buffer[i];
-    }
+    data[i] = (float)temp_buffer[i];
   }
 
   free(temp_buffer);

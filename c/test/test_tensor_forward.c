@@ -1,5 +1,6 @@
 #include "../buffer.h"
 #include "../tensor.h"
+#include "../utils.h"
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
@@ -31,6 +32,7 @@ void test_forward_pass() {
   Tensor *outl = apply_op(OP_LOGSOFTMAX, (Tensor *[]){outr}, 1);
   Tensor *outm = apply_op(OP_MUL, (Tensor *[]){outl, m}, 2);
   Tensor *outx = apply_op(OP_SUM, (Tensor *[]){outm}, 1);
+  printf("FINISHED FWD\n");
 
   // Print result
   printf("Result: ");

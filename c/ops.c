@@ -536,6 +536,7 @@ Buffer *nll(Buffer *pred, Buffer *target) {
 }
 
 Buffer *nll_backward(Buffer *grad_output, Buffer *target) {
+
   if (!validate_op_input(grad_output) || !validate_op_input(target)) {
     return NULL;
   }
@@ -550,9 +551,6 @@ Buffer *nll_backward(Buffer *grad_output, Buffer *target) {
     return NULL;
   }
 
-  int batch_size = target->st->shape[0];
-  int num_classes = target->st->shape[1];
-
   // Allocate memory for the gradient
   Buffer *grad =
       allocate_result_buffer(target->size, target->st->shape, target->st->ndim);
@@ -561,19 +559,14 @@ Buffer *nll_backward(Buffer *grad_output, Buffer *target) {
     return NULL;
   }
 
-  float grad_scale = grad_output->data[0] / batch_size;
+  float grad_scale = grad_output->data[0] / target->st->numel;
 
-  // Calculate the gradient
-  for (int i = 0; i < batch_size; i++) {
-    for (int j = 0; j < num_classes; j++) {
-      int index = i * num_classes + j;
-      grad->data[index] = grad_scale * target->data[index];
-    }
+  for (int i = 0; i < target->st->numel; i++) {
+    grad->data[i] = grad_scale * target->data[i];
   }
 
   return grad;
 }
-
 // Movement operations
 
 Buffer *slice(Buffer *buf, int *start, int *end) {
