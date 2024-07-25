@@ -24,25 +24,13 @@ struct Tensor {
   Context *ctx;
 };
 
-struct Context {
-  OpType op;
-  Tensor **parents;
-  int num_parents;
-  Buffer **saved_buffers;
-  int num_saved_buffers;
-};
-
 // Tensor operations
 Tensor* tensor_create(Buffer* buf);
 void tensor_destroy(Tensor* t);
 void tensor_backward(Tensor* t, int implicit);
 
-// Graph operations
-void graph_destroy(Tensor *ret);
-
 // Context operations
-Buffer* context_forward(Context* self, Tensor** inputs, int num_inputs);
-Buffer** context_backward(Context* self, Buffer* grad_output);
+Buffer* context_forward(OpType op, Buffer** inputs, int num_inputs);
 
 // Operation application
 Tensor* apply_op(OpType op, Tensor** inputs, int num_inputs);

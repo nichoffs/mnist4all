@@ -66,29 +66,31 @@ void shapetracker_print(Buffer *buf) {
 }
 
 void op_print(OpType op) {
-  printf("Operation: ");
+  fprintf(stderr, "Entering op_print function\n");
+  fprintf(stderr, "Operation: ");
   switch (op) {
   case OP_MUL:
-    printf("Multiplication\n");
+    fprintf(stderr, "Multiplication\n");
     break;
   case OP_RELU:
-    printf("ReLU\n");
+    fprintf(stderr, "ReLU\n");
     break;
   case OP_DOT:
-    printf("Dot Product\n");
+    fprintf(stderr, "Dot Product\n");
     break;
   case OP_SUM:
-    printf("Sum\n");
+    fprintf(stderr, "Sum\n");
     break;
   case OP_LOGSOFTMAX:
-    printf("Log Softmax\n");
+    fprintf(stderr, "Log Softmax\n");
     break;
   case OP_NLL:
-    printf("NLL\n");
+    fprintf(stderr, "NLL\n");
     break;
   default:
-    printf("Unknown\n");
+    fprintf(stderr, "Unknown (%d)\n", op);
   }
+  fprintf(stderr, "Exiting op_print function\n");
 }
 
 void shape_print(Buffer *buf) {
@@ -103,26 +105,4 @@ void shape_print(Buffer *buf) {
     }
   }
   printf(")\n");
-}
-
-void context_print(Context *ctx) {
-  if (!ctx) {
-    fprintf(stderr, "Context is NULL\n");
-    return;
-  }
-
-  printf("Context:\n");
-  op_print(ctx->op);
-
-  printf("  Number of parents: %d\n", ctx->num_parents);
-  printf("  Number of saved tensors: %d\n", ctx->num_saved_buffers);
-
-  if (ctx->saved_buffers && ctx->num_saved_buffers > 0) {
-    printf("  Saved tensors:\n");
-    for (int i = 0; i < ctx->num_saved_buffers; i++) {
-      printf("    Tensor %d:\n", i);
-      shape_print(ctx->saved_buffers[i]);
-      /* shapetracker_print(ctx->saved_buffers[i]); */
-    }
-  }
 }

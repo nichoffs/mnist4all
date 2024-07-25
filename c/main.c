@@ -179,11 +179,14 @@ static MNISTClassifier *create_mnist_classifier() {
 
 static Tensor *mnist_classifier_forward(MNISTClassifier *model, Tensor *x,
                                         Tensor *y) {
+  printf("Preparing dot!\n");
   Tensor *h1 = apply_op(OP_DOT, (Tensor *[]){x, model->l1}, 2);
+  printf("Done dot!\n");
+  printf("Preparing ReLU!\n");
   Tensor *h1_relu = apply_op(OP_RELU, (Tensor *[]){h1}, 1);
   Tensor *logits = apply_op(OP_DOT, (Tensor *[]){h1_relu, model->l2}, 2);
   Tensor *probs = apply_op(OP_LOGSOFTMAX, (Tensor *[]){logits}, 1);
-  Tensor *loss = apply_op(OP_NLL, (Tensor *[]){probs, y}, 1);
+  Tensor *loss = apply_op(OP_NLL, (Tensor *[]){probs, y}, 2);
   return loss;
 }
 
@@ -211,8 +214,6 @@ int main() {
   int *indices = (int *)malloc(BS * sizeof(int));
 
   MNISTClassifier *model = create_mnist_classifier();
-  Tensor *params[] = {model->l1, model->l2};
-  int num_params = 2;
 
   for (int epoch = 0; epoch < 1; epoch++) {
 
@@ -235,7 +236,7 @@ int main() {
     /* sgd_step(params, num_params, LR); */
 
     // Clean up
-    graph_destroy(loss);
+    /* graph_destroy(loss); */
     buffer_destroy(images);
     buffer_destroy(labels);
   }

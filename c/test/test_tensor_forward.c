@@ -1,21 +1,10 @@
 #include "../buffer.h"
 #include "../tensor.h"
-#include "../utils.h"
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
 
 #define EPSILON 1e-6
-
-int compare_buffers(Buffer *buf1, Buffer *buf2) {
-  if (buf1->size != buf2->size)
-    return 0;
-  for (int i = 0; i < buf1->size; i++) {
-    if (fabs(buf1->data[i] - buf2->data[i]) > EPSILON)
-      return 0;
-  }
-  return 1;
-}
 
 void test_forward_pass() {
   printf("Testing forward pass...\n");
@@ -57,10 +46,6 @@ void test_forward_pass() {
   assert(fabs(outx->buf->data[0] - expected_result) < EPSILON);
 
   printf("Forward pass test passed!\n");
-  tensor_backward(outx, true);
-  shapetracker_print(x->grad);
-  shapetracker_print(W->grad);
-  graph_destroy(outx);
 }
 
 int main() {
