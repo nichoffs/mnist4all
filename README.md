@@ -4,4 +4,11 @@ Implementing a tiny autograd framework for training MNIST to >95% across various
 - [ ] C (custom tensors with barebones autograd)
 - [ ] HTML/CSS/Javascript (details not figured out yet)
 
+# Python Demo
 ![python gif](./exec_gif/python.gif)
+
+# C Demo
+
+![c gif](./exec_gif/c.gif)
+
+# HTML/CSS/JS Demo
