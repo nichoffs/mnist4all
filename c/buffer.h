@@ -3,8 +3,12 @@
 
 #include "shapetracker.h"
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
 
-/**
+/*
  * @struct Buffer
  * @brief Represents a tensor buffer with shape information.
  *
@@ -34,10 +38,16 @@ int *calculate_strides(const int *shape, int ndim);
  */
 Buffer* buffer_create(float* data, int size, ShapeTracker* st, bool copy);
 
+/*
+ * @brief Copies the content of a buffer into a new one
+ *
+ * @param Buffer* Pointer to the Buffer to be copied
+ * @return Pointer to the newly created Buffer, or NULL if creation failed.
+ */
 Buffer* buffer_copy(Buffer* buf);
 
 
-/**
+/*
  * @brief Creates a new Buffer with data and shape information.
  *
  * This function creates a new ShapeTracker internally.
@@ -51,7 +61,7 @@ Buffer* buffer_copy(Buffer* buf);
  */
 Buffer* buffer_data_create(float* data, int size, int* shape, int ndim, bool copy);
 
-/**
+/*
  * @brief Destroys a Buffer and frees associated memory.
  *
  * If the buffer's copy flag is true, this function also frees the data array.
@@ -60,10 +70,31 @@ Buffer* buffer_data_create(float* data, int size, int* shape, int ndim, bool cop
  */
 void buffer_destroy(Buffer* buf);
 
+/*
+ * @brief Initializes a buffer according to shape with zeros
+ *
+ * @param int* The shape of the buffer
+ * @param int The number of dimensions in the shape
+ * @return Pointer to the newly created Buffer, or NULL if creation failed.
+ */
 Buffer* zeros(int* shape, int ndim);
-/* Buffer* randint(int *shape, int ndim, int low, int high); */
-Buffer* uniform(int* shape, int ndim, float low, float high);
-Buffer* full_like(Buffer* buf, float fill_value);
 
+/*
+ * @brief Initializes a buffer according to shape within the range low(inclusive) and high(exclusive)
+ *
+ * @param int* The shape of the buffer
+ * @param int The number of dimensions in the shape
+ * @param int The lower bound(inclusive) and high(exclusive)
+ */
+Buffer* uniform(int* shape, int ndim, float low, float high);
+
+/*
+ * @brief Initializes a new buffer with the shape of the input buffer and fill value passed
+ *
+ * @param Buffer* Pointer to the buffer to mimic the shape
+ * @param int The value to fill the buffer with
+ * @return Pointer to the newly created Buffer, or NULL if creation failed.
+ */
+Buffer* full_like(Buffer* buf, float fill_value);
 
 #endif // BUFFER_H

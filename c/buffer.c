@@ -1,11 +1,4 @@
 #include "buffer.h"
-#include "shapetracker.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-
-// TODO: HOW TO HANDLE FREEING MEMORY WHERE COPY IS FALSE
 
 static Buffer *allocate_buffer() {
   Buffer *buf = (Buffer *)malloc(sizeof(Buffer));
@@ -67,15 +60,13 @@ Buffer *buffer_create(float *data, int size, ShapeTracker *st, bool copy) {
 
 Buffer *buffer_copy(Buffer *buf) {
   if (!buf) {
-    printf("CANNOT COPY NULL BUFFER\n");
+    fprintf(stderr, "Cannot copy NULL buffer\n");
     return NULL;
   }
 
   ShapeTracker *st = shapetracker_create(buf->st->shape, buf->st->stride,
                                          buf->st->offset, buf->st->ndim);
-  Buffer *copy = buffer_create(buf->data, buf->size, st, true);
-
-  return copy;
+  return buffer_create(buf->data, buf->size, st, true);
 }
 
 Buffer *buffer_data_create(float *data, int size, int *shape, int ndim,
@@ -90,7 +81,7 @@ Buffer *buffer_data_create(float *data, int size, int *shape, int ndim,
     return NULL;
 
   ShapeTracker *st = shapetracker_create(shape, stride, 0, ndim);
-  free(stride); // shapetracker_create makes a copy, so we can free this
+  free(stride);
 
   Buffer *buf = buffer_create(data, size, st, copy);
   if (!buf)
@@ -102,12 +93,18 @@ Buffer *buffer_data_create(float *data, int size, int *shape, int ndim,
 void buffer_destroy(Buffer *buf) {
   if (!buf)
     return;
-
-  if (buf->copy) {
+  if (buf->copy)
     free(buf->data);
-  }
   shapetracker_destroy(buf->st);
   free(buf);
+}
+
+static int calculate_size(int *shape, int ndim) {
+  int size = 1;
+  for (int i = 0; i < ndim; i++) {
+    size *= shape[i];
+  }
+  return size;
 }
 
 Buffer *zeros(int *shape, int ndim) {
@@ -116,66 +113,15 @@ Buffer *zeros(int *shape, int ndim) {
     return NULL;
   }
 
-  int size = 1;
-  for (int i = 0; i < ndim; i++) {
-    size *= shape[i];
-  }
-
-  if (!size) {
+  int size = calculate_size(shape, ndim);
+  if (size == 0) {
     fprintf(stderr, "Size is 0\n");
     return NULL;
   }
 
   float *data = (float *)calloc(size, sizeof(float));
-
-  Buffer *buf = buffer_data_create(data, size, shape, ndim, false);
-
-  return buf;
+  return buffer_data_create(data, size, shape, ndim, false);
 }
-
-/* Buffer *randint(int *shape, int ndim, int low, int high) { */
-/*   if (!shape) { */
-/*     fprintf(stderr, "Shape is NULL\n"); */
-/*     return NULL; */
-/*   } */
-/*   if (low >= high) { */
-/*     fprintf(stderr, "Invalid range: low must be less than high\n"); */
-/*     return NULL; */
-/*   } */
-/**/
-/*   int size = 1; */
-/*   for (int i = 0; i < ndim; i++) { */
-/*     size *= shape[i]; */
-/*   } */
-/**/
-/*   if (!size) { */
-/*     fprintf(stderr, "Size is 0\n"); */
-/*     return NULL; */
-/*   } */
-/**/
-/*   float *data = (float *)malloc(size * sizeof(float)); */
-/*   if (!data) { */
-/*     fprintf(stderr, "Failed to allocate memory for randint data\n"); */
-/*     return NULL; */
-/*   } */
-/**/
-/*   static int seeded = 0; */
-/*   if (!seeded) { */
-/*     srand(time(NULL)); */
-/*     seeded = 1; */
-/*   } */
-/**/
-/*   int range = high - low; */
-/*   for (int i = 0; i < size; i++) { */
-/*     data[i] = (float)(low + (rand() % range)); */
-/*   } */
-/**/
-/*   Buffer *buf = buffer_data_create(data, size, shape, ndim, false); */
-/*   if (!buf) { */
-/*     free(data); */
-/*   } */
-/*   return buf; */
-/* } */
 
 Buffer *uniform(int *shape, int ndim, float low, float high) {
   if (!shape) {
@@ -187,11 +133,8 @@ Buffer *uniform(int *shape, int ndim, float low, float high) {
     return NULL;
   }
 
-  int size = 1;
-  for (int i = 0; i < ndim; i++) {
-    size *= shape[i];
-  }
-  if (!size) {
+  int size = calculate_size(shape, ndim);
+  if (size == 0) {
     fprintf(stderr, "Size is 0\n");
     return NULL;
   }
@@ -210,14 +153,12 @@ Buffer *uniform(int *shape, int ndim, float low, float high) {
 
   float range = high - low;
   for (int i = 0; i < size; i++) {
-    float random = (float)rand() / RAND_MAX;
-    data[i] = low + random * range;
+    data[i] = low + ((float)rand() / RAND_MAX) * range;
   }
 
   Buffer *buf = buffer_data_create(data, size, shape, ndim, false);
-  if (!buf) {
+  if (!buf)
     free(data);
-  }
   return buf;
 }
 
@@ -229,9 +170,10 @@ Buffer *full_like(Buffer *buf, float fill_value) {
 
   Buffer *ret = buffer_copy(buf);
   if (!ret) {
-    printf("Buffer copy failed");
+    fprintf(stderr, "Buffer copy failed\n");
     return NULL;
   }
+
   for (int i = 0; i < ret->st->numel; i++) {
     int ix = view_index(ret->st, i);
     ret->data[ix] = fill_value;

@@ -1,6 +1,10 @@
 #ifndef SHAPETRACKER_H
 #define SHAPETRACKER_H
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 /**
  * @struct ShapeTracker
  * @brief Tracks the shape and stride information of a tensor.

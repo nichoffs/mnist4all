@@ -1,14 +1,8 @@
-#include "../buffer.h"
-#include "../tensor.h"
-#include "../utils.h"
-#include <assert.h>
-#include <math.h>
-#include <stdio.h>
+#include "tensor_forward.h"
 
 #define EPSILON 1e-6
 
 void test_forward_pass() {
-  printf("Testing forward pass...\n");
 
   // Initialize input tensors
   float x_data[] = {0.1f, 0.2f, 0.3f};
@@ -32,25 +26,10 @@ void test_forward_pass() {
   Tensor *outl = apply_op(OP_LOGSOFTMAX, (Tensor *[]){outr}, 1);
   Tensor *outm = apply_op(OP_MUL, (Tensor *[]){outl, m}, 2);
   Tensor *outx = apply_op(OP_SUM, (Tensor *[]){outm}, 1);
-  printf("FINISHED FWD\n");
-
-  // Print result
-  printf("Result: ");
-  for (int i = 0; i < outx->buf->size; i++) {
-    printf("%f ", outx->buf->data[i]);
-  }
-  printf("\n");
 
   // Expected result (calculated using numpy)
   float expected_result = -1.2609298;
 
   // Compare result
   assert(fabs(outx->buf->data[0] - expected_result) < EPSILON);
-
-  printf("Forward pass test passed!\n");
-}
-
-int main() {
-  test_forward_pass();
-  return 0;
 }

@@ -1,12 +1,4 @@
 #include "tensor.h"
-#include "buffer.h"
-#include "ops.h"
-#include "utils.h"
-#include <assert.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 Tensor *tensor_create(Buffer *buf) {
   Tensor *t = (Tensor *)malloc(sizeof(Tensor));

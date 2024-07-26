@@ -1,38 +1,6 @@
-#include "../buffer.h"
-#include "../ops.h"
-#include <assert.h>
-#include <math.h>
-#include <stdio.h>
-
-#define EPSILON 1e-6
-
-// Helper function to compare buffers
-
-int compare_buffers(Buffer *buf1, Buffer *buf2) {
-  if (buf1->st->numel != buf2->st->numel) {
-    printf("Number of elements mismatch: %d vs %d\n", buf1->st->numel,
-           buf2->st->numel);
-    return 0;
-  }
-  for (int i = 0; i < buf1->st->numel; i++) {
-    int ix1 = view_index(buf1->st, i);
-    int ix2 = view_index(buf2->st, i);
-    if (fabs(buf1->data[ix1] - buf2->data[ix2]) > EPSILON) {
-      printf("Value mismatch at index %d: %f vs %f\n", i, buf1->data[ix1],
-             buf2->data[ix2]);
-      return 0;
-    }
-  }
-  return 1;
-}
-
-// Helper function to create a test buffer
-Buffer *create_test_buffer(float *data, int size, int *shape, int ndim) {
-  return buffer_data_create(data, size, shape, ndim, true);
-}
+#include "movement.h"
 
 void test_slice() {
-  printf("Testing slice operation...\n");
 
   // Test case 1: 2D slice
   float data1[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
@@ -91,12 +59,9 @@ void test_slice() {
   buffer_destroy(buf3);
   buffer_destroy(result3);
   buffer_destroy(expected_buf3);
-
-  printf("Slice operation tests passed!\n");
 }
 
 void test_transpose() {
-  printf("Testing transpose operation...\n");
 
   // Test case 1: 2x3 matrix
   float data1[] = {1, 2, 3, 4, 5, 6};
@@ -131,12 +96,9 @@ void test_transpose() {
   buffer_destroy(buf2);
   buffer_destroy(result2);
   buffer_destroy(expected_buf2);
-
-  printf("Transpose operation tests passed!\n");
 }
 
 void test_flatten() {
-  printf("Testing flatten operation...\n");
 
   // Test case 1: 2D array
   float data1[] = {1, 2, 3, 4, 5, 6};
@@ -179,12 +141,9 @@ void test_flatten() {
   buffer_destroy(buf2);
   buffer_destroy(result2);
   buffer_destroy(expected_buf2);
-
-  printf("Flatten operation tests passed!\n");
 }
 
 void test_unsqueeze() {
-  printf("Testing unsqueeze operation...\n");
 
   // Test case 1: 1D array, unsqueeze at beginning
   float data1[] = {1, 2, 3, 4};
@@ -234,12 +193,9 @@ void test_unsqueeze() {
   buffer_destroy(result2);
   buffer_destroy(buf3);
   buffer_destroy(result3);
-
-  printf("Unsqueeze operation tests passed!\n");
 }
 
 void test_expand() {
-  printf("Testing expand operation...\n");
 
   // Test case 1: 2D array, expand second dimension
   float data1[] = {1, 2, 3, 4};
@@ -288,16 +244,4 @@ void test_expand() {
   buffer_destroy(buf2);
   buffer_destroy(result2);
   buffer_destroy(expected_buf2);
-
-  printf("Expand operation tests passed!\n");
-}
-
-int main() {
-  test_slice();
-  test_transpose();
-  test_flatten();
-  test_unsqueeze();
-  test_expand();
-  printf("All movement operation tests completed successfully!\n");
-  return 0;
 }

@@ -1,8 +1,13 @@
 #ifndef TENOSR_H
 #define TENOSR_H
 
-
 #include "buffer.h"
+#include "ops.h"
+#include <assert.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 // Operation types
 typedef enum {

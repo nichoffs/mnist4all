@@ -1,12 +1,4 @@
-#include "../buffer.h"
-#include "../ops.h"
-#include "../tensor.h"
-#include "../utils.h"
-#include <assert.h>
-#include <math.h>
-#include <stdio.h>
-
-#define EPSILON 1e-6
+#include "tensor_backward.h"
 
 void test_backward_pass() {
 
@@ -53,28 +45,8 @@ void test_backward_pass() {
       buffer_data_create(expected_W_grad_data, expected_W_grad_size,
                          expected_W_grad_shape, expected_W_grad_ndim, true);
 
-  printf("Forward pass test passed!\n");
-  printf("Beginning backward...\n");
-
   backward(outx, 1);
 
-  printf("outx grad:\n");
-  shapetracker_print(outx->grad);
-  printf("outm grad:\n");
-  shapetracker_print(outm->grad);
-  printf("outl grad:\n");
-  shapetracker_print(outl->grad);
-  printf("outr grad:\n");
-  shapetracker_print(outr->grad);
-  printf("out grad:\n");
-  shapetracker_print(out->grad);
-  printf("x grad:\n");
-  shapetracker_print(x->grad);
-  printf("W grad:\n");
-  shapetracker_print(W->grad);
-}
-
-int main() {
-  test_backward_pass();
-  return 0;
+  compare_buffers(expected_x_grad, x->grad);
+  compare_buffers(expected_W_grad, W->grad);
 }

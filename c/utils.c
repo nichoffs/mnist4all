@@ -1,6 +1,4 @@
 #include "utils.h"
-#include "tensor.h"
-#include <stdio.h>
 
 static void print_indent(int depth) {
   for (int i = 0; i < depth; i++) {

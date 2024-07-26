@@ -1,11 +1,4 @@
-// In test_dot.c or a similar test file
-
-#include "../buffer.h"
-#include "../ops.h"
-#include <assert.h>
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include "dot.h"
 
 #define EPSILON 1e-6
 
@@ -132,11 +125,4 @@ void test_dot() {
     free(data5);
     free(weight_data5);
   }
-
-  printf("All dot tests passed!\n");
-}
-
-int main() {
-  test_dot();
-  return 0;
 }

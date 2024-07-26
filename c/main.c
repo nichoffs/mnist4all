@@ -1,7 +1,6 @@
 #include "buffer.h"
 #include "dataloader.h"
 #include "tensor.h"
-#include "utils.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,6 +12,26 @@
 #define SAMPLE_SIZE 784
 #define NUM_CLASSES 10
 #define NUM_SAMPLES 60000
+
+static void graph_destroy(Tensor *loss) {
+  if (!loss) {
+    printf("Cannot destroy graph on tensor that doesn't exist!\n");
+  }
+
+  if (loss->ctx->saved_buffer) {
+    buffer_destroy(loss->ctx->saved_buffer);
+  }
+
+  for (int i = 0; i < loss->ctx->num_inputs; i++) {
+    tensor_destroy(loss->ctx->inputs[i]);
+  }
+
+  free(loss->ctx);
+  if (loss->grad) {
+    buffer_destroy(loss->grad);
+  }
+  buffer_destroy(loss->buf);
+}
 
 static Buffer *getImages(Buffer *images, int *indices, int num_indices,
                          int sample_size) {
@@ -32,7 +51,6 @@ static Buffer *getImages(Buffer *images, int *indices, int num_indices,
     return NULL;
   }
 
-  // Validate indices
   for (int i = 0; i < num_indices; i++) {
     if (indices[i] < 0 || indices[i] >= images->st->shape[0]) {
       fprintf(stderr, "Invalid index %d: out of range\n", indices[i]);
@@ -40,10 +58,8 @@ static Buffer *getImages(Buffer *images, int *indices, int num_indices,
     }
   }
 
-  // Create new shape for the result
   int new_shape[2] = {num_indices, sample_size};
 
-  // Allocate memory for the new buffer
   int new_size = num_indices * sample_size;
   float *new_data = malloc(new_size * sizeof(float));
   if (!new_data) {
@@ -51,7 +67,6 @@ static Buffer *getImages(Buffer *images, int *indices, int num_indices,
     return NULL;
   }
 
-  // Copy data from images to new buffer
   for (int i = 0; i < num_indices; i++) {
     int images_offset = indices[i] * sample_size;
     int dest_offset = i * sample_size;
@@ -61,7 +76,6 @@ static Buffer *getImages(Buffer *images, int *indices, int num_indices,
     }
   }
 
-  // Create and return the new buffer
   Buffer *result = buffer_data_create(new_data, new_size, new_shape, 2, false);
   if (!result) {
     fprintf(stderr, "Failed to create result buffer\n");
@@ -74,7 +88,6 @@ static Buffer *getImages(Buffer *images, int *indices, int num_indices,
 
 static Buffer *getLabels(Buffer *labels, int *indices, int num_indices,
                          int num_classes) {
-  // Validate input
   if (!labels || !indices) {
     fprintf(stderr, "Invalid input: labels or indices is NULL\n");
     return NULL;
@@ -84,7 +97,6 @@ static Buffer *getLabels(Buffer *labels, int *indices, int num_indices,
     return NULL;
   }
 
-  // Validate indices
   for (int i = 0; i < num_indices; i++) {
     if (indices[i] < 0 || indices[i] >= labels->st->shape[0]) {
       fprintf(stderr, "Invalid index %d: out of range\n", indices[i]);
@@ -92,10 +104,8 @@ static Buffer *getLabels(Buffer *labels, int *indices, int num_indices,
     }
   }
 
-  // Create new shape for the result
   int new_shape[2] = {num_indices, num_classes};
 
-  // Allocate memory for the new buffer
   int new_size = num_indices * num_classes;
   float *new_data = calloc(new_size, sizeof(float));
   if (!new_data) {
@@ -103,7 +113,6 @@ static Buffer *getLabels(Buffer *labels, int *indices, int num_indices,
     return NULL;
   }
 
-  // One-hot encode labels
   for (int i = 0; i < num_indices; i++) {
     int label = (int)labels->data[indices[i]];
     if (label < 0 || label >= num_classes) {
@@ -114,7 +123,6 @@ static Buffer *getLabels(Buffer *labels, int *indices, int num_indices,
     new_data[i * num_classes + label] = -1.0f;
   }
 
-  // Create and return the new buffer
   Buffer *result = buffer_data_create(new_data, new_size, new_shape, 2, false);
   if (!result) {
     fprintf(stderr, "Failed to create result buffer\n");
@@ -136,7 +144,6 @@ static int *rand_int(int low, int high, int size, int *arr) {
     return NULL;
   }
 
-  // Seed the random number generator if it hasn't been seeded yet
   static int seeded = 0;
   if (!seeded) {
     srand(time(NULL));

@@ -3,6 +3,10 @@
 
 #include "buffer.h"
 #include "shapetracker.h"
+#include <float.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 // Type definitions
 typedef float (*UnaryOpFunc)(float);

@@ -1,11 +1,4 @@
 #include "ops.h"
-#include "buffer.h"
-#include "shapetracker.h"
-#include "utils.h"
-#include <float.h>
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 // Helper functions
 
@@ -279,7 +272,6 @@ Buffer *dot_backward(Buffer *grad_output, Buffer *input1, Buffer *input2,
     return NULL;
   }
 
-  // Check dimensions
   if (grad_output->st->ndim != 2 || input1->st->ndim != 2 ||
       input2->st->ndim != 2) {
     fprintf(stderr, "Invalid dimensions for batch_dot_backward\n");
@@ -290,7 +282,6 @@ Buffer *dot_backward(Buffer *grad_output, Buffer *input1, Buffer *input2,
   int N = input1->st->shape[1]; // Input feature dimension
   int M = input2->st->shape[1]; // Output feature dimension
 
-  // Check if dimensions are compatible
   if (F != grad_output->st->shape[0] || M != grad_output->st->shape[1] ||
       N != input2->st->shape[0]) {
     fprintf(stderr, "Incompatible dimensions for batch_dot_backward\n");
@@ -300,7 +291,6 @@ Buffer *dot_backward(Buffer *grad_output, Buffer *input1, Buffer *input2,
   Buffer *grad_input;
 
   if (input_index == 0) {
-    // Computing gradient w.r.t. first input (batch_vectors)
     grad_input = allocate_result_buffer(F * N, input1->st->shape, 2);
     if (!grad_input)
       return NULL;
@@ -318,12 +308,10 @@ Buffer *dot_backward(Buffer *grad_output, Buffer *input1, Buffer *input2,
       }
     }
   } else if (input_index == 1) {
-    // Computing gradient w.r.t. second input (weight matrix)
     grad_input = allocate_result_buffer(N * M, input2->st->shape, 2);
     if (!grad_input)
       return NULL;
 
-    // Initialize grad_input to zero
     for (int i = 0; i < N * M; i++) {
       grad_input->data[i] = 0.0f;
     }
@@ -513,7 +501,6 @@ Buffer *nll(Buffer *pred, Buffer *target) {
     return NULL;
   }
 
-  // Element-wise multiplication
   Buffer *mul_result = mul(pred, target);
   if (!mul_result) {
     fprintf(stderr, "NLL Error: Failed to multiply pred and target\n");
@@ -522,7 +509,6 @@ Buffer *nll(Buffer *pred, Buffer *target) {
 
   float div = 1.0 / mul_result->size;
 
-  // Sum along the class dimension (axis 1)
   Buffer *result = sum(mul_result);
   buffer_destroy(mul_result);
   if (!result) {
@@ -551,7 +537,6 @@ Buffer *nll_backward(Buffer *grad_output, Buffer *target) {
     return NULL;
   }
 
-  // Allocate memory for the gradient
   Buffer *grad =
       allocate_result_buffer(target->size, target->st->shape, target->st->ndim);
   if (!grad) {
@@ -653,13 +638,11 @@ Buffer *flattenAxes(Buffer *buf, int ax1, int ax2) {
     return NULL;
   }
 
-  // Validate that ax1 is less than ax2 and they are adjacent
   if (ax1 >= ax2 || ax2 - ax1 != 1 || ax2 >= buf->st->ndim) {
     fprintf(stderr, "Invalid axes for flattening\n");
     return NULL;
   }
 
-  // Create new shape
   int new_ndim = buf->st->ndim - 1;
   int *new_shape = (int *)malloc(new_ndim * sizeof(int));
   if (!new_shape) {
@@ -667,20 +650,16 @@ Buffer *flattenAxes(Buffer *buf, int ax1, int ax2) {
     return NULL;
   }
 
-  // Copy shapes before ax1
   for (int i = 0; i < ax1; i++) {
     new_shape[i] = buf->st->shape[i];
   }
 
-  // Multiply shapes of ax1 and ax2
   new_shape[ax1] = buf->st->shape[ax1] * buf->st->shape[ax2];
 
-  // Copy shapes after ax2
   for (int i = ax1 + 1; i < new_ndim; i++) {
     new_shape[i] = buf->st->shape[i + 1];
   }
 
-  // Calculate new strides
   int *new_stride = calculate_strides(new_shape, new_ndim);
   if (!new_stride) {
     fprintf(stderr, "Stride calculation failed in flattenAxes\n");
@@ -688,7 +667,6 @@ Buffer *flattenAxes(Buffer *buf, int ax1, int ax2) {
     return NULL;
   }
 
-  // Create new ShapeTracker
   ShapeTracker *new_st =
       shapetracker_create(new_shape, new_stride, buf->st->offset, new_ndim);
   if (!new_st) {
@@ -698,14 +676,12 @@ Buffer *flattenAxes(Buffer *buf, int ax1, int ax2) {
     return NULL;
   }
 
-  // Create new Buffer
   Buffer *ret = buffer_create(buf->data, buf->size, new_st, false);
   if (!ret) {
     fprintf(stderr, "Failed to create new Buffer in flattenAxes\n");
     shapetracker_destroy(new_st);
   }
 
-  // Clean up
   free(new_shape);
   free(new_stride);
 

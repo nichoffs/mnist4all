@@ -1,28 +1,6 @@
-#include "../buffer.h"
-#include "../ops.h"
-#include <assert.h>
-#include <float.h>
-#include <math.h>
-#include <stdio.h>
-
-#define EPSILON 1e-6
-
-int compare_buffers(Buffer *buf1, Buffer *buf2) {
-  if (buf1->size != buf2->size)
-    return 0;
-  for (int i = 0; i < buf1->size; i++) {
-    if (fabs(buf1->data[i] - buf2->data[i]) > EPSILON)
-      return 0;
-  }
-  return 1;
-}
-
-Buffer *create_test_buffer(float *data, int size, int *shape, int ndim) {
-  return buffer_data_create(data, size, shape, ndim, true);
-}
+#include "test.h"
 
 void test_add() {
-  printf("Testing add operation...\n");
 
   // Test case 1: Basic addition
   float data1[] = {1.0f, 2.0f, 3.0f, 4.0f};
@@ -59,12 +37,9 @@ void test_add() {
   buffer_destroy(result3);
   buffer_destroy(expected_buf1);
   buffer_destroy(expected_buf3);
-
-  printf("Add operation tests passed!\n");
 }
 
 void test_sub() {
-  printf("Testing subtract operation...\n");
 
   // Test case 1: Basic subtraction
   float data1[] = {10.0f, 8.0f, 6.0f, 4.0f};
@@ -98,12 +73,9 @@ void test_sub() {
   buffer_destroy(result3);
   buffer_destroy(expected_buf1);
   buffer_destroy(expected_buf3);
-
-  printf("Subtract operation tests passed!\n");
 }
 
 void test_mul() {
-  printf("Testing multiply operation...\n");
 
   // Test case 1: Basic multiplication
   float data1[] = {1.0f, 2.0f, 3.0f, 4.0f};
@@ -140,12 +112,9 @@ void test_mul() {
   buffer_destroy(result3);
   buffer_destroy(expected_buf1);
   buffer_destroy(expected_buf2);
-
-  printf("Multiply operation tests passed!\n");
 }
 
 void test_divide() {
-  printf("Testing divide operation...\n");
 
   // Test case 1: Basic division
   float data1[] = {10.0f, 8.0f, 6.0f, 4.0f};
@@ -181,12 +150,9 @@ void test_divide() {
   buffer_destroy(result2);
   buffer_destroy(result3);
   buffer_destroy(expected_buf1);
-
-  printf("Divide operation tests passed!\n");
 }
 
 void test_binary_op_errors() {
-  printf("Testing binary op error handling...\n");
 
   // Test case 1: NULL input
   float data[] = {1.0f, 2.0f, 3.0f, 4.0f};
@@ -207,16 +173,4 @@ void test_binary_op_errors() {
   // Clean up
   buffer_destroy(buf);
   buffer_destroy(buf2);
-
-  printf("Binary op error handling tests passed!\n");
-}
-
-int main() {
-  test_add();
-  test_sub();
-  test_mul();
-  test_divide();
-  test_binary_op_errors();
-  printf("All binary operation tests passed successfully!\n");
-  return 0;
 }

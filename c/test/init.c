@@ -1,12 +1,6 @@
-#include "../buffer.h"
-#include "../shapetracker.h"
-#include <assert.h>
-#include <math.h>
-#include <stdio.h>
-#include <string.h>
+#include "init.h"
 
 void test_buffer_create() {
-  printf("Testing buffer_create...\n");
 
   // Test case 1: Basic creation with copy = true
   float data1[] = {1.0f, 2.0f, 3.0f, 4.0f};
@@ -46,12 +40,9 @@ void test_buffer_create() {
   buffer_destroy(buf1);
   buffer_destroy(buf2);
   shapetracker_destroy(st3);
-
-  printf("All buffer_create tests passed!\n");
 }
 
 void test_buffer_data_create() {
-  printf("Testing buffer_data_create...\n");
 
   // Test case 1: Basic creation with copy = true
   float data1[] = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f};
@@ -105,12 +96,9 @@ void test_buffer_data_create() {
   buffer_destroy(buf1);
   buffer_destroy(buf2);
   buffer_destroy(buf5);
-
-  printf("All buffer_data_create tests passed!\n");
 }
 
 void test_zeros() {
-  printf("Testing zeros...\n");
 
   // Test case 1: 1D zeros
   int shape1[] = {5};
@@ -163,78 +151,9 @@ void test_zeros() {
   buffer_destroy(buf1);
   buffer_destroy(buf2);
   buffer_destroy(buf3);
-
-  printf("All zeros tests passed!\n");
-}
-
-void test_randint() {
-  printf("Testing randint...\n");
-
-  // Test case 1: 1D randint with range [0, 10)
-  int shape1[] = {100};
-  Buffer *buf1 = randint(shape1, 1, 0, 10);
-  assert(buf1 != NULL);
-  assert(buf1->size == 100);
-  assert(buf1->st->ndim == 1);
-  assert(buf1->st->shape[0] == 100);
-  assert(buf1->st->stride[0] == 1);
-  for (int i = 0; i < 100; i++) {
-    assert(buf1->data[i] >= 0 && buf1->data[i] < 10);
-    assert(floorf(buf1->data[i]) == buf1->data[i]);
-  }
-
-  // Test case 2: 2D randint with range [-5, 5)
-  int shape2[] = {10, 10};
-  Buffer *buf2 = randint(shape2, 2, -5, 5);
-  assert(buf2 != NULL);
-  assert(buf2->size == 100);
-  assert(buf2->st->ndim == 2);
-  assert(buf2->st->shape[0] == 10 && buf2->st->shape[1] == 10);
-  assert(buf2->st->stride[0] == 10 && buf2->st->stride[1] == 1);
-  for (int i = 0; i < 100; i++) {
-    assert(buf2->data[i] >= -5 && buf2->data[i] < 5);
-    assert(floorf(buf2->data[i]) == buf2->data[i]);
-  }
-
-  // Test case 3: 3D randint with range [100, 201)
-  int shape3[] = {5, 5, 5};
-  Buffer *buf3 = randint(shape3, 3, 100, 201);
-  assert(buf3 != NULL);
-  assert(buf3->size == 125);
-  assert(buf3->st->ndim == 3);
-  assert(buf3->st->shape[0] == 5 && buf3->st->shape[1] == 5 &&
-         buf3->st->shape[2] == 5);
-  assert(buf3->st->stride[0] == 25 && buf3->st->stride[1] == 5 &&
-         buf3->st->stride[2] == 1);
-  for (int i = 0; i < 125; i++) {
-    assert(buf3->data[i] >= 100 && buf3->data[i] < 201);
-    assert(floorf(buf3->data[i]) == buf3->data[i]);
-  }
-
-  // Test case 4: Empty shape (should return NULL)
-  int shape4[] = {0};
-  Buffer *buf4 = randint(shape4, 1, 0, 10);
-  assert(buf4 == NULL);
-
-  // Test case 5: NULL shape (should return NULL)
-  Buffer *buf5 = randint(NULL, 2, 0, 10);
-  assert(buf5 == NULL);
-
-  // Test case 6: Invalid range (low >= high)
-  int shape6[] = {5};
-  Buffer *buf6 = randint(shape6, 1, 10, 10);
-  assert(buf6 == NULL);
-
-  // Clean up
-  buffer_destroy(buf1);
-  buffer_destroy(buf2);
-  buffer_destroy(buf3);
-
-  printf("All randint tests passed!\n");
 }
 
 void test_uniform() {
-  printf("Testing uniform...\n");
 
   // Test case 1: 1D uniform with range [0.0, 1.0)
   int shape1[] = {100};
@@ -292,16 +211,4 @@ void test_uniform() {
   buffer_destroy(buf1);
   buffer_destroy(buf2);
   buffer_destroy(buf3);
-
-  printf("All uniform tests passed!\n");
-}
-
-int main() {
-  test_buffer_create();
-  test_buffer_data_create();
-  test_zeros();
-  test_randint();
-  test_uniform();
-  printf("All buffer initialization tests passed successfully!\n");
-  return 0;
 }

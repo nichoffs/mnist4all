@@ -1,28 +1,8 @@
-#include "../buffer.h"
-#include "../ops.h"
-#include <assert.h>
-#include <float.h>
-#include <math.h>
-#include <stdio.h>
+#include "unary_ops.h"
 
 #define EPSILON 1e-6
 
-int compare_buffers(Buffer *buf1, Buffer *buf2) {
-  if (buf1->size != buf2->size)
-    return 0;
-  for (int i = 0; i < buf1->size; i++) {
-    if (fabs(buf1->data[i] - buf2->data[i]) > EPSILON)
-      return 0;
-  }
-  return 1;
-}
-
-Buffer *create_test_buffer(float *data, int size, int *shape, int ndim) {
-  return buffer_data_create(data, size, shape, ndim, true);
-}
-
 void test_square_root() {
-  printf("Testing square_root operation...\n");
 
   // Test case 1: Basic square root
   float data1[] = {0.0f, 1.0f, 4.0f, 9.0f};
@@ -55,12 +35,9 @@ void test_square_root() {
   buffer_destroy(result2);
   buffer_destroy(result3);
   buffer_destroy(expected_buf1);
-
-  printf("Square root operation tests passed!\n");
 }
 
 void test_logarithm() {
-  printf("Testing logarithm operation...\n");
 
   // Test case 1: Basic logarithm
   float data1[] = {1.0f, 2.0f, expf(1.0f), 10.0f};
@@ -96,12 +73,9 @@ void test_logarithm() {
   buffer_destroy(result3);
   buffer_destroy(expected_buf1);
   buffer_destroy(expected_buf2);
-
-  printf("Logarithm operation tests passed!\n");
 }
 
 void test_exponent() {
-  printf("Testing exponent operation...\n");
 
   // Test case 1: Basic exponent
   float data1[] = {0.0f, 1.0f, 2.0f, -1.0f};
@@ -137,12 +111,9 @@ void test_exponent() {
   buffer_destroy(result3);
   buffer_destroy(expected_buf1);
   buffer_destroy(expected_buf2);
-
-  printf("Exponent operation tests passed!\n");
 }
 
 void test_unary_op_errors() {
-  printf("Testing unary op error handling...\n");
 
   // Test case 1: NULL input
   Buffer *result = square_root(NULL);
@@ -157,12 +128,9 @@ void test_unary_op_errors() {
   // Clean up
   buffer_destroy(empty_buf);
   buffer_destroy(result);
-
-  printf("Unary op error handling tests passed!\n");
 }
 
 void test_log_softmax() {
-  printf("Testing log_softmax operation...\n");
 
   // Test case 1: Basic log_softmax
   float data1[] = {1.0f, 2.0f, 3.0f, 4.0f, 1.0f, 2.0f};
@@ -196,16 +164,4 @@ void test_log_softmax() {
   buffer_destroy(result2);
   buffer_destroy(expected_buf1);
   buffer_destroy(expected_buf2);
-
-  printf("Log softmax operation tests passed!\n");
-}
-
-int main() {
-  test_square_root();
-  test_logarithm();
-  test_exponent();
-  test_unary_op_errors();
-  test_log_softmax();
-  printf("All unary operation tests passed successfully!\n");
-  return 0;
 }
