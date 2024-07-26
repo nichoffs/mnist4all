@@ -8,6 +8,27 @@ Tensor *tensor_create(Buffer *buf) {
   return t;
 }
 
+void tensor_destroy(Tensor *t) {
+  if (t == NULL) {
+    return; // Nothing to destroy if the tensor is NULL
+  }
+
+  if (t->buf) {
+    buffer_destroy(t->buf);
+    t->buf = NULL;
+  }
+
+  if (t->grad) {
+    buffer_destroy(t->grad);
+    t->grad = NULL;
+  }
+
+  if (t->ctx) {
+    free(t->ctx);
+    t->ctx = NULL;
+  }
+}
+
 bool validate_op(OpType op) {
   switch (op) {
   case OP_MUL:

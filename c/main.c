@@ -2,6 +2,7 @@
 #include "dataloader.h"
 #include "tensor.h"
 #include <math.h>
+#include <ncurses.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -12,26 +13,7 @@
 #define SAMPLE_SIZE 784
 #define NUM_CLASSES 10
 #define NUM_SAMPLES 60000
-
-static void graph_destroy(Tensor *loss) {
-  if (!loss) {
-    printf("Cannot destroy graph on tensor that doesn't exist!\n");
-  }
-
-  if (loss->ctx->saved_buffer) {
-    buffer_destroy(loss->ctx->saved_buffer);
-  }
-
-  for (int i = 0; i < loss->ctx->num_inputs; i++) {
-    tensor_destroy(loss->ctx->inputs[i]);
-  }
-
-  free(loss->ctx);
-  if (loss->grad) {
-    buffer_destroy(loss->grad);
-  }
-  buffer_destroy(loss->buf);
-}
+#define PROGRESS_BAR_WIDTH 50
 
 static Buffer *getImages(Buffer *images, int *indices, int num_indices,
                          int sample_size) {
@@ -194,6 +176,25 @@ void sgd_step(Tensor **params, int num_params, float lr) {
   }
 }
 
+void print_progress_bar(int epoch, int total_epochs, float loss) {
+  float progress = (float)(epoch + 1) / total_epochs;
+  int bar_width = (int)(progress * PROGRESS_BAR_WIDTH);
+
+  printf("\033[K"); // Clear the line
+  printf("Epoch %4d/%d [", epoch + 1, total_epochs);
+
+  for (int i = 0; i < PROGRESS_BAR_WIDTH; ++i) {
+    if (i < bar_width)
+      printf("=");
+    else if (i == bar_width)
+      printf(">");
+    else
+      printf(" ");
+  }
+
+  printf("] %3d%% | Loss: %.4f\n", (int)(progress * 100.0), loss);
+}
+
 int main() {
   Buffer *train_images, *train_labels, *test_images, *test_labels;
 
@@ -207,35 +208,54 @@ int main() {
   int *indices = (int *)malloc(BS * sizeof(int));
 
   MNISTClassifier *model = create_mnist_classifier();
+  Tensor *h1;
+  Tensor *h1_relu;
+  Tensor *logits;
+  Tensor *probs;
+  Tensor *loss;
 
-  for (int epoch = 0; epoch < 1000; epoch++) {
+  Buffer *images;
+  Buffer *labels;
+
+  Tensor *x;
+  Tensor *y;
+
+  for (int epoch = 0; epoch < EPOCHS; epoch++) {
 
     rand_int(0, NUM_SAMPLES, BS, indices);
+    images = getImages(train_images, indices, BS, SAMPLE_SIZE);
+    labels = getLabels(train_labels, indices, BS, NUM_CLASSES);
 
-    Buffer *images = getImages(train_images, indices, BS, SAMPLE_SIZE);
-    Buffer *labels = getLabels(train_labels, indices, BS, NUM_CLASSES);
-
-    Tensor *x = tensor_create(images);
-    Tensor *y = tensor_create(labels);
+    x = tensor_create(images);
+    y = tensor_create(labels);
 
     // Forward pass
-    Tensor *h1 = apply_op(OP_DOT, (Tensor *[]){x, model->l1}, 2);
-    Tensor *h1_relu = apply_op(OP_RELU, (Tensor *[]){h1}, 1);
-    Tensor *logits = apply_op(OP_DOT, (Tensor *[]){h1_relu, model->l2}, 2);
-    Tensor *probs = apply_op(OP_LOGSOFTMAX, (Tensor *[]){logits}, 1);
-    Tensor *loss = apply_op(OP_NLL, (Tensor *[]){probs, y}, 2);
-    printf("Loss: %f\n", loss->buf->data[0]);
+    h1 = apply_op(OP_DOT, (Tensor *[]){x, model->l1}, 2);
+    h1_relu = apply_op(OP_RELU, (Tensor *[]){h1}, 1);
+    logits = apply_op(OP_DOT, (Tensor *[]){h1_relu, model->l2}, 2);
+    probs = apply_op(OP_LOGSOFTMAX, (Tensor *[]){logits}, 1);
+    loss = apply_op(OP_NLL, (Tensor *[]){probs, y}, 2);
+
+    print_progress_bar(epoch, EPOCHS, loss->buf->data[0]);
+    if (epoch < EPOCHS - 1) {
+      printf("\033[1A");
+    }
 
     // Backward pass
     backward(loss, 1);
+
+    tensor_destroy(h1);
+    tensor_destroy(h1_relu);
+    tensor_destroy(logits);
+    tensor_destroy(probs);
+    tensor_destroy(loss);
+    tensor_destroy(x);
+    tensor_destroy(y);
 
     // Update parameters
     sgd_step((Tensor *[]){model->l1, model->l2}, 2, LR);
 
     // Clean up
-    /* graph_destroy(loss); */
-    buffer_destroy(images);
-    buffer_destroy(labels);
   }
 
   return 0;

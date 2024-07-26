@@ -7,7 +7,7 @@ W_init = np.random.randn(3, 3).astype(np.float32)
 m_init = np.random.randn(1, 3).astype(np.float32)
 
 
-def test_tinygrad():
+def test():
     x = Tensor(x_init)
     W = Tensor(W_init)
     m = Tensor(m_init)
@@ -33,7 +33,8 @@ def test_pytorch():
     return outx.detach().numpy(), x.grad, W.grad
 
 
-for x, y in zip(test_tinygrad(), test_pytorch()):
-    np.testing.assert_allclose(x, y, atol=1e-6)  # pyright: ignore
+outx, x_grad, W_grad = test()
 
-# add print statements to see if the test passes
+for x, y in zip(test(), test_pytorch()):
+    np.testing.assert_allclose(x, y, atol=1e-6)  # pyright: ignore
+print("passed")
