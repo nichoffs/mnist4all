@@ -33,8 +33,6 @@ def test_pytorch():
     return outx.detach().numpy(), x.grad, W.grad
 
 
-outx, x_grad, W_grad = test()
-
 for x, y in zip(test(), test_pytorch()):
     np.testing.assert_allclose(x, y, atol=1e-6)  # pyright: ignore
-print("passed")
+print("Passed!")

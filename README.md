@@ -5,10 +5,10 @@ Implementing a tiny autograd framework for training MNIST to >95% across various
 - [ ] HTML/CSS/Javascript (details not figured out yet)
 
 # Python Demo
-![python gif](./exec_gif/python.gif)
+![python gif](./gif/python.gif)
 
 # C Demo
 
-![c gif](./exec_gif/c.gif)
+![c gif](./gif/c.gif)
 
 # HTML/CSS/JS Demo
