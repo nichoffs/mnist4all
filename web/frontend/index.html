@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>MNIST Training and Inference</title>
+    <title>MNIST Training Progress</title>
     <meta charset="UTF-8" />
     <link rel="stylesheet" href="https://unpkg.com/98.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -25,14 +25,6 @@
         .window-body {
             flex-grow: 1;
             display: flex;
-            padding: 10px;
-            overflow: hidden;
-        }
-
-        .left-panel,
-        .right-panel {
-            width: 50%;
-            display: flex;
             flex-direction: column;
             padding: 10px;
         }
@@ -50,39 +42,6 @@
         .chart-container {
             flex-grow: 1;
             position: relative;
-            min-height: 0;
-        }
-
-        #drawing-grid {
-            display: grid;
-            grid-template-columns: repeat(28, 1fr);
-            gap: 1px;
-            width: 100%;
-            aspect-ratio: 1;
-            margin-bottom: 10px;
-        }
-
-        .grid-cell {
-            background-color: white;
-            border: 1px solid #ccc;
-        }
-
-        .grid-cell.active {
-            background-color: black;
-        }
-
-        .right-panel h3 {
-            margin-top: 0;
-            margin-bottom: 10px;
-        }
-
-        .button-container {
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .button-container button {
-            width: 48%;
         }
     </style>
 </head>
@@ -90,35 +49,22 @@
 <body>
     <div class="window">
         <div class="title-bar">
-            <div class="title-bar-text">
-                MNIST Training and Inference
-            </div>
+            <div class="title-bar-text">MNIST Training Progress</div>
         </div>
         <div class="window-body">
-            <div class="left-panel">
-                <div class="controls">
-                    <button id="downloadBtn">Download Dataset</button>
-                    <button id="trainBtn" disabled>Train Model</button>
-                </div>
-                <div class="status">
-                    <p>Status: <span id="status">Waiting for action</span></p>
-                    <p>Iteration: <span id="iteration">0</span></p>
-                    <p>Loss: <span id="loss">N/A</span></p>
-                    <p>Accuracy: <span id="accuracy">N/A</span></p>
-                    <p>Final Test Accuracy: <span id="final-accuracy">N/A</span></p>
-                </div>
-                <div class="chart-container">
-                    <canvas id="chart"></canvas>
-                </div>
+            <div class="controls">
+                <button id="downloadBtn">Download Dataset</button>
+                <button id="trainBtn" disabled>Train Model</button>
             </div>
-            <div class="right-panel">
-                <h3>Draw a digit (0-9)</h3>
-                <div id="drawing-grid"></div>
-                <div class="button-container">
-                    <button id="clearBtn">Clear</button>
-                    <button id="predictBtn">Predict</button>
-                </div>
-                <p>Prediction: <span id="prediction">N/A</span></p>
+            <div class="status">
+                <p>Status: <span id="status">Waiting for action</span></p>
+                <p>Iteration: <span id="iteration">0</span></p>
+                <p>Loss: <span id="loss">N/A</span></p>
+                <p>Accuracy: <span id="accuracy">N/A</span></p>
+                <p>Final Test Accuracy: <span id="final-accuracy">N/A</span></p>
+            </div>
+            <div class="chart-container">
+                <canvas id="chart"></canvas>
             </div>
         </div>
     </div>
@@ -133,47 +79,6 @@
             const downloadBtn = document.getElementById('downloadBtn');
             const trainBtn = document.getElementById('trainBtn');
             const statusSpan = document.getElementById('status');
-            const drawingGrid = document.getElementById('drawing-grid');
-            const clearBtn = document.getElementById('clearBtn');
-            const predictBtn = document.getElementById('predictBtn');
-            const predictionSpan = document.getElementById('prediction');
-
-            // Initialize drawing grid
-            for (let i = 0; i < 28 * 28; i++) {
-                const cell = document.createElement('div');
-                cell.classList.add('grid-cell');
-                cell.addEventListener('mousedown', () => startDrawing(cell));
-                cell.addEventListener('mouseover', () => draw(cell));
-                cell.addEventListener('mouseup', stopDrawing);
-                drawingGrid.appendChild(cell);
-            }
-
-            let isDrawing = false;
-
-            function startDrawing(cell) {
-                isDrawing = true;
-                draw(cell);
-            }
-
-            function draw(cell) {
-                if (isDrawing) {
-                    cell.classList.add('active');
-                }
-            }
-
-            function stopDrawing() {
-                isDrawing = false;
-            }
-
-            clearBtn.addEventListener('click', () => {
-                document.querySelectorAll('.grid-cell').forEach(cell => cell.classList.remove('active'));
-                predictionSpan.textContent = 'N/A';
-            });
-
-            predictBtn.addEventListener('click', () => {
-                const imageData = Array.from(document.querySelectorAll('.grid-cell')).map(cell => cell.classList.contains('active') ? 1 : 0);
-                ws.send(JSON.stringify({action: 'inference', image_data: imageData}));
-            });
 
             downloadBtn.addEventListener('click', () => {
                 ws.send(JSON.stringify({action: 'download'}));
@@ -276,16 +181,14 @@
                     dataPoints.loss.push(data.loss);
                     dataPoints.accuracy.push(data.accuracy);
 
-                    if (dataPoints.loss.length % 5 === 0) {  // Update chart every 5 data points
+                    if (dataPoints.loss.length % 5 === 0) {
                         updateChart();
                     }
                 } else if ('final_accuracy' in data) {
                     document.getElementById('final-accuracy').textContent = data.final_accuracy.toFixed(4);
-                    updateChart();  // Ensure final update
+                    updateChart();
                     statusSpan.textContent = 'Training completed';
                     trainBtn.disabled = false;
-                } else if ('prediction' in data) {
-                    predictionSpan.textContent = data.prediction;
                 }
             };
         });

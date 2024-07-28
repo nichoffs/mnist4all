@@ -51,27 +51,6 @@ class MNISTClassifier:
         return x.dot(self.l1).relu().dot(self.l2).logsoftmax()
 
 
-model = None
-
-
-def inference(image_data):
-    global model
-    if model is None:
-        return "Model not trained. Please train the model first."
-
-    # Convert the received image data to a Tensor
-    data = np.array(image_data, dtype=np.float32).reshape(1, 784)
-    image_tensor = Tensor(data)
-
-    # Perform inference
-    output = model(image_tensor)
-
-    # Get the predicted digit
-    predicted_digit = np.argmax(output.buf)
-
-    return int(predicted_digit)
-
-
 async def train_model(websocket):
     global X_train, Y_train, X_test, Y_test
     if X_train is None or Y_train is None or X_test is None or Y_test is None:
@@ -115,7 +94,6 @@ async def train_model(websocket):
 
 
 async def websocket_handler(websocket, path):
-    global model
     try:
         async for message in websocket:
             data = json.loads(message)
@@ -123,16 +101,7 @@ async def websocket_handler(websocket, path):
                 result = fetch_mnist_download()
                 await websocket.send(json.dumps({"download_status": result}))
             elif data["action"] == "train":
-                model = MNISTClassifier()  # Initialize the model
                 await train_model(websocket)
-            elif data["action"] == "inference":
-                if "image_data" not in data:
-                    await websocket.send(
-                        json.dumps({"error": "No image data provided"})
-                    )
-                else:
-                    prediction = inference(data["image_data"])
-                    await websocket.send(json.dumps({"prediction": prediction}))
     except websockets.exceptions.ConnectionClosedError:
         pass
 
