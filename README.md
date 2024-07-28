@@ -2,7 +2,7 @@ Implementing a tiny autograd framework for training MNIST to >95% across various
 
 - [x] Python (numpy wrapper with barebones autograd)
 - [x] C (custom tensors with barebones autograd)
-- [ ] HTML/CSS/Javascript (to be continued...)
+- [x] HTML/CSS/Javascript (just a front-end for python server using websockets)
 
 # Python Demo
 ![python gif](./gif/python.gif)
@@ -13,4 +13,4 @@ Implementing a tiny autograd framework for training MNIST to >95% across various
 
 # HTML/CSS/JS Demo
 
-To be continued...
+![web gif](./gif/web.gif)
